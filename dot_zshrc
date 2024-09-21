@@ -1,0 +1,29 @@
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.zsh_history
+HISTSIZE=100000
+SAVEHIST=100000
+bindkey -e
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/c137arch/.zshrc'
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
+
+TRAPTERM () { exit }
+PROMPT="%F{white}%B[%f%F{gree}%n%f%F{white}@%f%F{045}%m%f %F{white}%~ ]%b%f%# "
+
+bindkey  "^[[H"   beginning-of-line
+bindkey  "^[[F"   end-of-line
+bindkey  "^[[3~"  delete-char
+bindkey  "^[[5~"  beginning-of-history
+bindkey  "^[[6~"  end-of-history
+
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+eval "$(atuin init zsh)"
+
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
