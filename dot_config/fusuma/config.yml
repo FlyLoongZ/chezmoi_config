@@ -1,0 +1,12 @@
+swipe:
+  3:
+    up:
+      command: pactl set-sink-volume 0 +1%
+    down:
+      command: pactl set-sink-volume 0 -1%
+
+threshold:
+  swipe: 0.1
+
+interval:
+  swipe: 0.1
