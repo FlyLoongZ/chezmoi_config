@@ -1,0 +1,12 @@
+[Unit]
+Description=rclone_mount
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/rclone mount --config %h/.config/rclone/rclone.conf jianguoyun-keepass:/dav/keepass %h/Documents/keepass --vfs-cache-mode writes
+ExecStop=/usr/bin/fusermount -u %h/Documents/keepass
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
