@@ -1,0 +1,11 @@
+export XMODIFIERS=@im=fcitx
+export EDITOR="kate -b"
+
+# xdg setting for app
+export VDPAU_DRIVER=radeonsi
+export ANDROID_USER_HOME="$XDG_DATA_HOME"/android
+export CARGO_HOME="$XDG_DATA_HOME"/cargo
+export DOTNET_CLI_HOME="$XDG_DATA_HOME"/dotnet
+export GOPATH="$XDG_DATA_HOME"/go
+export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
+export WINEPREFIX="$XDG_DATA_HOME"/wine
