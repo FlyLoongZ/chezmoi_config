@@ -40,10 +40,10 @@ geo-auto-update: true
 geo-update-interval: 24
 # 自定义 GEO 下载地址
 geox-url:
-  geoip: "https://gh.con.sh/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
-  geosite: "https://gh.con.sh/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
-  mmdb: "https://gh.con.sh/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
-  asn: "https://gh.con.sh/https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb"
+  geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+  geosite: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
+  asn: "https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb"
 
 dns:
   enable: true
@@ -53,9 +53,9 @@ dns:
   use-hosts: true
   use-system-hosts: true
   default-nameserver:
-    - 127.0.0.1
+    - 223.6.6.6
   nameserver:
-    - 127.0.0.1
+    - 223.6.6.6
   nameserver-policy:
     "geosite:geolocation-!cn":
       - "https://1.1.1.1/dns-query"
