@@ -6,6 +6,7 @@ format = '@[$hostname](bold 045)\] '
 disabled = false
 
 [character]
+format = '$symbol'
 success_symbol = '[→](bold green) '
 error_symbol = '[→](bold red) '
 disabled = false
