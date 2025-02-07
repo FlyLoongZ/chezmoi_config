@@ -57,7 +57,7 @@ symbol = "conda "
 
 [crystal]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "cr "
+symbol = "crystal "
 
 [daml]
 format = "\\[[$symbol($version)]($style)\\]"
@@ -77,11 +77,11 @@ symbol = "docker "
 
 [dotnet]
 format = "\\[[$symbol($version)(🎯 $tfm)]($style)\\]"
-symbol = ".NET "
+symbol = "dotnet "
 
 [elixir]
 format = "\\[[$symbol($version \\(OTP $otp_version\\))]($style)\\]"
-symbol = "exs "
+symbol = "elixir "
 
 [elm]
 format = "\\[[$symbol($version)]($style)\\]"
@@ -89,11 +89,11 @@ symbol = "elm "
 
 [erlang]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "ⓔ "
+symbol = "erlang "
 
 [fennel]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "fnl "
+symbol = "fennel "
 
 [fossil_branch]
 format = "\\[[$symbol$branch]($style)\\]"
@@ -101,19 +101,17 @@ symbol = "fossil "
 
 [gcloud]
 format = "\\[[$symbol$account(@$domain)(\\($region\\))]($style)\\]"
-symbol = "gcp "
+symbol = "gcloud "
 
 [git_branch]
 format = "\\[[$symbol$branch]($style)\\]"
 symbol = "git "
 
+[git_commit]
+tag_symbol = " tag "
+
 [git_status]
 format = "([\\[$all_status$ahead_behind\\]]($style))"
-ahead = ">"
-behind = "<"
-diverged = "<>"
-renamed = "r"
-deleted = "x"
 
 [golang]
 format = "\\[[$symbol($version)]($style)\\]"
@@ -146,11 +144,11 @@ symbol = "java "
 
 [julia]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "jl "
+symbol = "julia "
 
 [kotlin]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "kt "
+symbol = "kotlin "
 
 [kubernetes]
 format = "\\[[$symbol$context( \\($namespace\\))]($style)\\]"
@@ -193,62 +191,13 @@ format = "\\[[$symbol$cloud(\\($project\\))]($style)\\]"
 [os]
 format = "\\[[$symbol]($style)\\]"
 
-  [os.symbols]
-  AIX = "aix "
-  Alpaquita = "alq "
-  AlmaLinux = "alma "
-  Alpine = "alp "
-  Amazon = "amz "
-  Android = "andr "
-  Arch = "rch "
-  Artix = "atx "
-  CentOS = "cent "
-  Debian = "deb "
-  DragonFly = "dfbsd "
-  Emscripten = "emsc "
-  EndeavourOS = "ndev "
-  Fedora = "fed "
-  FreeBSD = "fbsd "
-  Garuda = "garu "
-  Gentoo = "gent "
-  HardenedBSD = "hbsd "
-  Illumos = "lum "
-  Kali = "kali "
-  Linux = "lnx "
-  Mabox = "mbox "
-  Macos = "mac "
-  Manjaro = "mjo "
-  Mariner = "mrn "
-  MidnightBSD = "mid "
-  Mint = "mint "
-  NetBSD = "nbsd "
-  NixOS = "nix "
-  OpenBSD = "obsd "
-  OpenCloudOS = "ocos "
-  openEuler = "oeul "
-  openSUSE = "osuse "
-  OracleLinux = "orac "
-  Pop = "pop "
-  Raspbian = "rasp "
-  Redhat = "rhl "
-  RedHatEnterprise = "rhel "
-  RockyLinux = "rky "
-  Redox = "redox "
-  Solus = "sol "
-  SUSE = "suse "
-  Ubuntu = "ubnt "
-  Ultramarine = "ultm "
-  Unknown = "unk "
-  Void = "void "
-  Windows = "win "
-
 [package]
 format = "\\[[$symbol$version]($style)\\]"
 symbol = "pkg "
 
 [perl]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "pl "
+symbol = "perl "
 
 [php]
 format = "\\[[$symbol($version)]($style)\\]"
@@ -268,7 +217,7 @@ symbol = "purs "
 
 [python]
 format = "\\[[${symbol}${pyenv_prefix}(${version})(\\($virtualenv\\))]($style)\\]"
-symbol = "py "
+symbol = "python "
 
 [raku]
 format = "\\[[$symbol($version-$vm_version)]($style)\\]"
@@ -279,11 +228,11 @@ format = "\\[[$symbol($version)]($style)\\]"
 
 [ruby]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "rb "
+symbol = "ruby "
 
 [rust]
 format = "\\[[$symbol($version)]($style)\\]"
-symbol = "rs "
+symbol = "rust "
 
 [scala]
 format = "\\[[$symbol($version)]($style)\\]"
@@ -327,9 +276,6 @@ symbol = "zig "
 [solidity]
 format = "\\[[$symbol($version)]($style)\\]"
 symbol = "solidity "
-
-[git_commit]
-tag_symbol = " tag "
 
 [azure]
 symbol = "az "
