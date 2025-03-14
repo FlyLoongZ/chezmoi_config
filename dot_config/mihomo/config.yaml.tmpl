@@ -47,39 +47,38 @@ geox-url:
 
 dns:
   enable: true
-  prefer-h3: true
   ipv6: true
   enhanced-mode: redir-host
-  use-hosts: true
-  use-system-hosts: true
+  respect-rules: true
   default-nameserver:
     - 127.0.0.1
   nameserver:
-    - 127.0.0.1
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
   nameserver-policy:
-    "geosite:geolocation-!cn":
-      - "https://1.1.1.1/dns-query"
-      - "https://dns.google/dns-query"
-
+    "geosite:cn":
+      - 127.0.0.1
+  proxy-server-nameserver:
+    - 127.0.0.1
 
 proxy-providers:
   topman:
     type: http
     url: "{{ .mihomo_proxy_url }}"
     path: proxy-providers/topman.yaml
-    proxy: proxy
+    proxy: miproxy
 
 proxy-groups:
-  - name: "proxy"
+  - name: miproxy
     type: select
     use:
     - topman
 
 rules:
-   - GEOIP,private,DIRECT
-   - GEOSITE,private,DIRECT
-   - GEOIP,CN,DIRECT
-   - GEOSITE,CN,DIRECT
-   - GEOSITE,geolocation-!cn,proxy
-   - MATCH,proxy
+  - GEOSITE,geolocation-!cn,miproxy
+  - GEOSITE,private,DIRECT
+  - GEOSITE,CN,DIRECT
+  - GEOIP,private,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,miproxy
 
