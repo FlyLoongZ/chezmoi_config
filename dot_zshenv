@@ -15,3 +15,6 @@ export DOTNET_CLI_HOME="$XDG_DATA_HOME"/dotnet
 export GOPATH="$XDG_DATA_HOME"/go
 export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
 
+# ANDROID DEV ENV
+export ANDROID_HOME="$HOME/Android/Sdk"
+export NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk)"
