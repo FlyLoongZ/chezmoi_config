@@ -46,7 +46,9 @@ geox-url:
   asn: "https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb"
 
 dns:
+  # 启用dns模块
   enable: true
+  # 启用ipv6 dns解析
   ipv6: true
   enhanced-mode: redir-host
   respect-rules: true
@@ -61,6 +63,7 @@ dns:
   proxy-server-nameserver:
     - 127.0.0.1
 
+# 代理集合
 proxy-providers:
   topman:
     type: http
@@ -68,17 +71,242 @@ proxy-providers:
     path: proxy-providers/topman.yaml
     proxy: miproxy
 
+# 代理组
 proxy-groups:
   - name: miproxy
     type: select
     use:
     - topman
 
+ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: miproxy}
+ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: miproxy}
+ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: miproxy}
+
+# 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
+rule-providers:
+  # === domainset规则 ===
+  # apple中国cdn域
+  apple-cdn-domainset:
+    <<: *ruleset_domain
+    path: rules/apple-cdn-domainset.txt
+    url: "https://ruleset.skk.moe/Clash/domainset/apple_cdn.txt"
+
+  # 对象存储和静态资产cdn域
+  cdn-domainset:
+    <<: *ruleset_domain
+    path: rules/cdn-domainset.txt
+    url: "https://ruleset.skk.moe/Clash/domainset/cdn.txt"
+
+  # 软件更新和大型文件托管域
+  download-domainset:
+    <<: *ruleset_domain
+    path: rules/download-domainset.txt
+    url: "https://ruleset.skk.moe/Clash/domainset/download.txt"
+
+  # Game下载，以及Steam、Epic、Blizzard、Gog、Ubisoft、EA、Xbox、PlayStation、Riot、Bethesda等的CDN域
+  game-download-domainset:
+    <<: *ruleset_domain
+    path: rules/game-download-domainset.txt
+    url: "https://ruleset.skk.moe/Clash/domainset/game-download.txt"
+
+  # speedtest域
+  speedtest-domainset:
+    <<: *ruleset_domain
+    path: rules/speedtest-domainset.txt
+    url: "https://ruleset.skk.moe/Clash/domainset/speedtest.txt"
+
+  # === non_ip规则 ===
+  # OpenAI和Claude的域
+  ai-non_ip:
+    <<: *ruleset_classical
+    path: rules/ai-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/ai.txt"
+
+  # apple中国cdn域
+  apple-cdn-non_ip:
+    <<: *ruleset_classical
+    path: rules/apple-cdn-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/apple_cdn.txt"
+
+  # apple中国服务域
+  apple-cn-non_ip:
+    <<: *ruleset_classical
+    path: rules/apple-cn-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/apple_cn.txt"
+
+  # apple域
+  apple-services-non_ip:
+    <<: *ruleset_classical
+    path: rules/apple-services-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/apple_services.txt"
+
+  # 对象存储和静态资产cdn域
+  cdn-non_ip:
+    <<: *ruleset_classical
+    path: rules/cdn-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/cdn.txt"
+
+  # 不应代理的域和进程
+  direct-non_ip:
+    <<: *ruleset_classical
+    path: rules/direct-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/direct.txt"
+
+  # 中国大陆地区域
+  domestic-non_ip:
+    <<: *ruleset_classical
+    path: rules/domestic-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/domestic.txt"
+
+  # 中国大陆地区不可用服务域
+  global-non_ip:
+    <<: *ruleset_classical
+    path: rules/global-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/global.txt"
+
+  # LAN 域和保留TLD
+  lan-non_ip:
+    <<: *ruleset_classical
+    path: rules/lan-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/lan.txt"
+
+  # 微软域
+  microsoft-non_ip:
+    <<: *ruleset_classical
+    path: rules/microsoft-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/microsoft.txt"
+
+  # 微软中国cdn域
+  microsoft-cdn-non_ip:
+    <<: *ruleset_classical
+    path: rules/microsoft-cdn-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/microsoft_cdn.txt"
+
+  # 流媒体域
+  stream-non_ip:
+    <<: *ruleset_classical
+    path: rules/stream-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/stream.txt"
+
+  # bilibili国际域
+  stream-biliintl-non_ip:
+    <<: *ruleset_classical
+    path: rules/stream-biliintl-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/stream_biliintl.txt"
+
+  # telegram域
+  telegram-non_ip:
+    <<: *ruleset_classical
+    path: rules/telegram-non_ip.txt
+    url: "https://ruleset.skk.moe/Clash/non_ip/telegram.txt"
+
+  # === ip规则 ===
+  # apple ip
+  apple-services-ip:
+    <<: *ruleset_ipcidr
+    path: rules/apple-services-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/apple_services.txt"
+
+  # 对象存储和静态资产cdn ip
+  cdn-ip:
+    <<: *ruleset_ipcidr
+    path: rules/cdn-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/cdn.txt"
+
+  china-ip:
+    <<: *ruleset_ipcidr
+    path: rules/china-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/china_ip.txt"
+
+  china-ipv6:
+    <<: *ruleset_ipcidr
+    path: rules/china-ipv6.txt
+    url: "https://ruleset.skk.moe/Clash/ip/china_ip_ipv6.txt"
+
+  # 中国大陆广播ip
+  domestic-ip:
+    <<: *ruleset_ipcidr
+    path: rules/domestic-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/domestic.txt"
+
+  # 软件更新和大文件托管ip
+  download-ip:
+    <<: *ruleset_ipcidr
+    path: rules/download-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/download.txt"
+
+  lan-ip:
+    <<: *ruleset_ipcidr
+    path: rules/lan-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/lan.txt"
+
+  # 流媒体ip
+  stream-ip:
+    <<: *ruleset_ipcidr
+    path: rules/stream-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/stream.txt"
+
+  # bilibili国际ip
+  stream-biliintl-ip:
+    <<: *ruleset_ipcidr
+    path: rules/stream-biliintl-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/stream_biliintl.txt"
+
+  telegram-ip:
+    <<: *ruleset_ipcidr
+    path: rules/telegram-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/telegram.txt"
+
+  telegram-asn-ip:
+    <<: *ruleset_ipcidr
+    path: rules/telegram-asn-ip.txt
+    url: "https://ruleset.skk.moe/Clash/ip/telegram_asn.txt"
+
 rules:
+  # domain规则
+  # 国外
+  - RULE-SET,cdn-domainset,miproxy
+  - RULE-SET,download-domainset,miproxy
+  - RULE-SET,game-download-domainset,miproxy
+  - RULE-SET,speedtest-domainset,miproxy
+  - RULE-SET,ai-non_ip,miproxy
+  - RULE-SET,apple-services-non_ip,miproxy
+  - RULE-SET,cdn-non_ip,miproxy
+  - RULE-SET,global-non_ip,miproxy
+  - RULE-SET,microsoft-non_ip,miproxy
+  - RULE-SET,stream-non_ip,miproxy
+  - RULE-SET,telegram-non_ip,miproxy
+
+  # 国内
+  - RULE-SET,apple-cdn-domainset,DIRECT
+  - RULE-SET,apple-cdn-non_ip,DIRECT
+  - RULE-SET,apple-cn-non_ip,DIRECT
+  - RULE-SET,direct-non_ip,DIRECT
+  - RULE-SET,domestic-non_ip,DIRECT
+  - RULE-SET,lan-non_ip,DIRECT
+  - RULE-SET,microsoft-cdn-non_ip,DIRECT
+
+  # ip规则
+  # 国外
+  - RULE-SET,apple-services-ip,miproxy
+  - RULE-SET,cdn-ip,miproxy
+  - RULE-SET,download-ip,miproxy
+  - RULE-SET,stream-ip,miproxy
+  - RULE-SET,telegram-ip,miproxy
+  - RULE-SET,telegram-asn-ip,miproxy
+  
+  # 国内
+  - RULE-SET,china-ip,DIRECT
+  - RULE-SET,china-ipv6,DIRECT
+  - RULE-SET,domestic-ip,DIRECT
+  - RULE-SET,lan-ip,DIRECT
+
+  # GET规则
   - GEOSITE,geolocation-!cn,miproxy
   - GEOSITE,private,DIRECT
   - GEOSITE,CN,DIRECT
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
+
   - MATCH,miproxy
 
