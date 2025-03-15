@@ -63,6 +63,28 @@ dns:
   proxy-server-nameserver:
     - 127.0.0.1
 
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: false
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  force-domain:
+    - +.v2ex.com
+  skip-domain:
+    - Mijia Cloud
+  skip-src-address:
+    - 192.168.0.3/32
+  skip-dst-address:
+    - 192.168.0.3/32
+
 # 代理集合
 proxy-providers:
   topman:
@@ -203,13 +225,13 @@ rule-providers:
   # === ip规则 ===
   # apple ip
   apple-services-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/apple-services-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/apple_services.txt"
 
   # 对象存储和静态资产cdn ip
   cdn-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/cdn-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/cdn.txt"
 
@@ -225,40 +247,40 @@ rule-providers:
 
   # 中国大陆广播ip
   domestic-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/domestic-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/domestic.txt"
 
   # 软件更新和大文件托管ip
   download-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/download-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/download.txt"
 
   lan-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/lan-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/lan.txt"
 
   # 流媒体ip
   stream-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/stream-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/stream.txt"
 
   # bilibili国际ip
   stream-biliintl-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/stream-biliintl-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/stream_biliintl.txt"
 
   telegram-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/telegram-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/telegram.txt"
 
   telegram-asn-ip:
-    <<: *ruleset_ipcidr
+    <<: *ruleset_classical
     path: rules/telegram-asn-ip.txt
     url: "https://ruleset.skk.moe/Clash/ip/telegram_asn.txt"
 
