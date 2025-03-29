@@ -40,10 +40,10 @@ geo-auto-update: true
 geo-update-interval: 24
 # 自定义 GEO 下载地址
 geox-url:
-  geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
-  geosite: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
-  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
-  asn: "https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb"
+  geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
+  geosite: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
+  mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb
+  asn: https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb
 
 dns:
   # 启用dns模块
@@ -87,22 +87,33 @@ sniffer:
 
 # 代理集合
 proxy-providers:
-  topman:
+  daili:
     type: http
-    url: "{{ .mihomo_proxy_url }}"
-    path: proxy-providers/topman.yaml
-    proxy: miproxy
+    url: {{ .daili_proxy_url }}
+    path: proxy-providers/daili.yaml
+    proxy: dailiproxy
+
+  wuxian:
+    type: http
+    url: {{ .wuxian_proxy_url }}
+    path: proxy-providers/wuxian.yaml
+    proxy: wuxianproxy
 
 # 代理组
 proxy-groups:
-  - name: miproxy
+  - name: dailiproxy
     type: select
     use:
-    - topman
+    - daili
 
-ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: miproxy}
-ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: miproxy}
-ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: miproxy}
+  - name: wuxianproxy
+    type: select
+    use:
+    - wuxian
+
+ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: dailiproxy}
+ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: dailiproxy}
+ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: dailiproxy}
 
 # 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
 rule-providers:
@@ -287,17 +298,17 @@ rule-providers:
 rules:
   # domain规则
   # 国外
-  - RULE-SET,cdn-domainset,miproxy
-  - RULE-SET,download-domainset,miproxy
-  - RULE-SET,game-download-domainset,miproxy
-  - RULE-SET,speedtest-domainset,miproxy
-  - RULE-SET,ai-non_ip,miproxy
-  - RULE-SET,apple-services-non_ip,miproxy
-  - RULE-SET,cdn-non_ip,miproxy
-  - RULE-SET,global-non_ip,miproxy
-  - RULE-SET,microsoft-non_ip,miproxy
-  - RULE-SET,stream-non_ip,miproxy
-  - RULE-SET,telegram-non_ip,miproxy
+  - RULE-SET,cdn-domainset,dailiproxy
+  - RULE-SET,download-domainset,dailiproxy
+  - RULE-SET,game-download-domainset,dailiproxy
+  - RULE-SET,speedtest-domainset,dailiproxy
+  - RULE-SET,ai-non_ip,dailiproxy
+  - RULE-SET,apple-services-non_ip,dailiproxy
+  - RULE-SET,cdn-non_ip,dailiproxy
+  - RULE-SET,global-non_ip,dailiproxy
+  - RULE-SET,microsoft-non_ip,dailiproxy
+  - RULE-SET,stream-non_ip,dailiproxy
+  - RULE-SET,telegram-non_ip,dailiproxy
 
   # 国内
   - RULE-SET,apple-cdn-domainset,DIRECT
@@ -310,12 +321,12 @@ rules:
 
   # ip规则
   # 国外
-  - RULE-SET,apple-services-ip,miproxy
-  - RULE-SET,cdn-ip,miproxy
-  - RULE-SET,download-ip,miproxy
-  - RULE-SET,stream-ip,miproxy
-  - RULE-SET,telegram-ip,miproxy
-  - RULE-SET,telegram-asn-ip,miproxy
+  - RULE-SET,apple-services-ip,dailiproxy
+  - RULE-SET,cdn-ip,dailiproxy
+  - RULE-SET,download-ip,dailiproxy
+  - RULE-SET,stream-ip,dailiproxy
+  - RULE-SET,telegram-ip,dailiproxy
+  - RULE-SET,telegram-asn-ip,dailiproxy
   
   # 国内
   - RULE-SET,china-ip,DIRECT
@@ -324,11 +335,11 @@ rules:
   - RULE-SET,lan-ip,DIRECT
 
   # GET规则
-  - GEOSITE,geolocation-!cn,miproxy
+  - GEOSITE,geolocation-!cn,dailiproxy
   - GEOSITE,private,DIRECT
   - GEOSITE,CN,DIRECT
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
 
-  - MATCH,miproxy
+  - MATCH,dailiproxy
 
