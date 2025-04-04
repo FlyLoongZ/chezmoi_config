@@ -3,7 +3,7 @@ allow-lan: false
 # 绑定地址
 bind-address: 0.0.0.0
 # 混合端口
-mixed-port: 7890
+mixed-port: 7891
 
 # 运行模式
 mode: rule
@@ -17,7 +17,7 @@ ipv6: true
 find-process-mode: strict
 
 # 外部控制 (API)
-external-controller: 127.0.0.1:9090
+external-controller: 127.0.0.1:9091
 # API 访问密钥
 secret: "mihomo123456"
 # 外部用户界面
@@ -87,22 +87,22 @@ sniffer:
 
 # 代理集合
 proxy-providers:
-  daili:
+  wuxian:
     type: http
-    url: {{ .daili_proxy_url }}
-    path: proxy-providers/daili.yaml
-    proxy: dailiproxy
+    url: {{ .wuxian_proxy_url }}
+    path: proxy-providers/wuxian.yaml
+    proxy: wuxianproxy
 
 # 代理组
 proxy-groups:
-  - name: dailiproxy
+  - name: wuxianproxy
     type: select
     use:
-    - daili
+    - wuxian
 
-ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: dailiproxy}
-ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: dailiproxy}
-ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: dailiproxy}
+ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: wuxianproxy}
+ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: wuxianproxy}
+ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: wuxianproxy}
 
 # 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
 rule-providers:
@@ -275,16 +275,16 @@ rule-providers:
 rules:
   # domain规则
   # 国外
-  - RULE-SET,cdn-domainset,dailiproxy
-  - RULE-SET,game-download-domainset,dailiproxy
-  - RULE-SET,speedtest-domainset,dailiproxy
-  - RULE-SET,ai-non_ip,dailiproxy
-  - RULE-SET,apple-services-non_ip,dailiproxy
-  - RULE-SET,cdn-non_ip,dailiproxy
-  - RULE-SET,global-non_ip,dailiproxy
-  - RULE-SET,microsoft-non_ip,dailiproxy
-  - RULE-SET,stream-non_ip,dailiproxy
-  - RULE-SET,telegram-non_ip,dailiproxy
+  - RULE-SET,cdn-domainset,wuxianproxy
+  - RULE-SET,game-download-domainset,wuxianproxy
+  - RULE-SET,speedtest-domainset,wuxianproxy
+  - RULE-SET,ai-non_ip,wuxianproxy
+  - RULE-SET,apple-services-non_ip,wuxianproxy
+  - RULE-SET,cdn-non_ip,wuxianproxy
+  - RULE-SET,global-non_ip,wuxianproxy
+  - RULE-SET,microsoft-non_ip,wuxianproxy
+  - RULE-SET,stream-non_ip,wuxianproxy
+  - RULE-SET,telegram-non_ip,wuxianproxy
 
   # 国内
   - RULE-SET,apple-cdn-domainset,DIRECT
@@ -297,11 +297,11 @@ rules:
 
   # ip规则
   # 国外
-  - RULE-SET,apple-services-ip,dailiproxy
-  - RULE-SET,cdn-ip,dailiproxy
-  - RULE-SET,stream-ip,dailiproxy
-  - RULE-SET,telegram-ip,dailiproxy
-  - RULE-SET,telegram-asn-ip,dailiproxy
+  - RULE-SET,apple-services-ip,wuxianproxy
+  - RULE-SET,cdn-ip,wuxianproxy
+  - RULE-SET,stream-ip,wuxianproxy
+  - RULE-SET,telegram-ip,wuxianproxy
+  - RULE-SET,telegram-asn-ip,wuxianproxy
   
   # 国内
   - RULE-SET,china-ip,DIRECT
@@ -310,11 +310,11 @@ rules:
   - RULE-SET,lan-ip,DIRECT
 
   # GET规则
-  - GEOSITE,geolocation-!cn,dailiproxy
+  - GEOSITE,geolocation-!cn,wuxianproxy
   - GEOSITE,private,DIRECT
   - GEOSITE,CN,DIRECT
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
 
-  - MATCH,dailiproxy
+  - MATCH,wuxianproxy
 
