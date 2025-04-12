@@ -63,27 +63,11 @@ dns:
   proxy-server-nameserver:
     - 127.0.0.1
 
-sniffer:
-  enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
-  override-destination: false
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443, 8443]
-  force-domain:
-    - +.v2ex.com
-  skip-domain:
-    - Mijia Cloud
-  skip-src-address:
-    - 192.168.0.3/32
-  skip-dst-address:
-    - 192.168.0.3/32
+proxytest: &proxytest
+  url: https://www.google.com/generate_204
+  interval: 300
+  timeout: 2000
+  expected-status: 204
 
 # 代理集合
 proxy-providers:
@@ -91,18 +75,104 @@ proxy-providers:
     type: http
     url: {{ .daili_proxy_url }}
     path: proxy-providers/daili.yaml
-    proxy: dailiproxy
+    health-check:
+      enable: false
+
+  d日本:
+    type: file
+    path: proxy-providers/daili.yaml
+    health-check:
+      enable: true
+      lazy: false
+      <<: *proxytest
+    filter: "(?i)日|jp|japan"
+
+  d香港:
+    type: file
+    path: proxy-providers/daili.yaml
+    health-check:
+      enable: false
+    filter: "(?i)港|hk|hongkong|hong kong"
+
+  d台湾:
+    type: file
+    path: proxy-providers/daili.yaml
+    health-check:
+      enable: false
+    filter: "(?i)台|tw|taiwan"
+
+  d美国:
+    type: file
+    path: proxy-providers/daili.yaml
+    health-check:
+      enable: false
+    filter: "(?i)美|us|unitedstates|united states"
+
+  d新加坡:
+    type: file
+    path: proxy-providers/daili.yaml
+    health-check:
+      enable: false
+    filter: "(?i)(新|sg|singapore)"
+
+  d其他地区:
+    type: file
+    path: proxy-providers/daili.yaml
+    health-check:
+      enable: false
+    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
 
 # 代理组
 proxy-groups:
   - name: dailiproxy
     type: select
-    use:
-    - daili
+    proxies:
+      - 日本
+      - 香港
+      - 台湾
+      - 新加坡
+      - 美国
+      - 其它地区
+      - 全部节点
 
-ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: dailiproxy}
-ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: dailiproxy}
-ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: dailiproxy}
+  - name: 香港
+    type: select
+    use:
+      - d香港
+
+  - name: 台湾
+    type: select
+    use:
+      - d台湾
+
+  - name: 日本
+    type: url-test
+    use:
+     - d日本
+
+  - name: 美国
+    type: select
+    use:
+      - d美国
+
+  - name: 新加坡
+    type: select
+    use:
+      - d新加坡
+
+  - name: 其它地区
+    type: select
+    use:
+      - d其他地区
+
+  - name: 全部节点
+    type: select
+    use:
+     - daili
+
+ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text, proxy: dailiproxy}
+ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text, proxy: dailiproxy}
+ruleset_classical: &ruleset_classical {type: http, interval: 43200, behavior: classical, format: text, proxy: dailiproxy}
 
 # 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
 rule-providers:

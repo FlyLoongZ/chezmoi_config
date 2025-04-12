@@ -63,27 +63,11 @@ dns:
   proxy-server-nameserver:
     - 127.0.0.1
 
-sniffer:
-  enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
-  override-destination: false
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443, 8443]
-  force-domain:
-    - +.v2ex.com
-  skip-domain:
-    - Mijia Cloud
-  skip-src-address:
-    - 192.168.0.3/32
-  skip-dst-address:
-    - 192.168.0.3/32
+proxytest: &proxytest
+  url: https://www.google.com/generate_204
+  interval: 300
+  timeout: 2000
+  expected-status: 204
 
 # 代理集合
 proxy-providers:
@@ -91,18 +75,104 @@ proxy-providers:
     type: http
     url: {{ .wuxian_proxy_url }}
     path: proxy-providers/wuxian.yaml
-    proxy: wuxianproxy
+    health-check:
+      enable: false
+  w日本:
+    type: file
+    path: proxy-providers/wuxian.yaml
+    health-check:
+      enable: true
+      lazy: false
+      <<: *proxytest
+    filter: "(?i)日|jp|japan"
+
+  w香港:
+    type: file
+    path: proxy-providers/wuxian.yaml
+    health-check:
+      enable: false
+    filter: "(?i)港|hk|hongkong|hong kong"
+
+  w台湾:
+    type: file
+    path: proxy-providers/wuxian.yaml
+    health-check:
+      enable: false
+    filter: "(?i)台|tw|taiwan"
+
+  w美国:
+    type: file
+    path: proxy-providers/wuxian.yaml
+    health-check:
+      enable: false
+    filter: "(?i)美|us|unitedstates|united states"
+
+  w新加坡:
+    type: file
+    path: proxy-providers/wuxian.yaml
+    health-check:
+      enable: false
+    filter: "(?i)(新|sg|singapore)"
+
+  w其他地区:
+    type: file
+    path: proxy-providers/wuxian.yaml
+    health-check:
+      enable: false
+    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
 
 # 代理组
 proxy-groups:
   - name: wuxianproxy
     type: select
-    use:
-    - wuxian
+    proxies:
+      - 日本
+      - 香港
+      - 台湾
+      - 新加坡
+      - 美国
+      - 其它地区
+      - 全部节点
 
-ruleset_domain: &ruleset_domain {type: http, interval: 600, behavior: domain, format: text, proxy: wuxianproxy}
-ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 600, behavior: ipcidr, format: text, proxy: wuxianproxy}
-ruleset_classical: &ruleset_classical {type: http, interval: 600, behavior: classical, format: text, proxy: wuxianproxy}
+  - name: 香港
+    type: select
+    use:
+      - w香港
+
+  - name: 台湾
+    type: select
+    use:
+      - w台湾
+
+  - name: 日本
+    type: url-test
+    use:
+     - w日本
+
+  - name: 美国
+    type: select
+    use:
+      - w美国
+
+  - name: 新加坡
+    type: select
+    use:
+      - w新加坡
+
+  - name: 其它地区
+    type: select
+    use:
+      - w其他地区
+
+  - name: 全部节点
+    type: select
+    use:
+     - wuxian
+
+
+ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text, proxy: wuxianproxy}
+ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text, proxy: wuxianproxy}
+ruleset_classical: &ruleset_classical {type: http, interval: 43200, behavior: classical, format: text, proxy: wuxianproxy}
 
 # 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
 rule-providers:
@@ -302,7 +372,7 @@ rules:
   - RULE-SET,stream-ip,wuxianproxy
   - RULE-SET,telegram-ip,wuxianproxy
   - RULE-SET,telegram-asn-ip,wuxianproxy
-  
+
   # 国内
   - RULE-SET,china-ip,DIRECT
   - RULE-SET,china-ipv6,DIRECT
