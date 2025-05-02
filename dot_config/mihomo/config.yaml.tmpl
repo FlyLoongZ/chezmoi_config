@@ -21,9 +21,9 @@ external-controller: 127.0.0.1:9090
 # API 访问密钥
 secret: "mihomo123456"
 # 外部用户界面
-external-ui: xd
+external-ui: zashboard
 # 外部用户界面下载地址
-external-ui-url: https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip
+external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
 
 # tcp 并发
 tcp-concurrent: true
@@ -77,14 +77,13 @@ proxy-providers:
     path: proxy-providers/daili.yaml
     health-check:
       enable: false
+    interval: 43200
 
   d日本:
     type: file
     path: proxy-providers/daili.yaml
     health-check:
-      enable: true
-      lazy: false
-      <<: *proxytest
+      enable: false
     filter: "(?i)日|jp|japan"
 
   d香港:
@@ -105,7 +104,9 @@ proxy-providers:
     type: file
     path: proxy-providers/daili.yaml
     health-check:
-      enable: false
+      enable: true
+      lazy: false
+      <<: *proxytest
     filter: "(?i)美|us|unitedstates|united states"
 
   d新加坡:
@@ -127,11 +128,11 @@ proxy-groups:
   - name: dailiproxy
     type: select
     proxies:
+      - 美国
       - 日本
       - 香港
       - 台湾
       - 新加坡
-      - 美国
       - 其它地区
       - 全部节点
 
@@ -146,12 +147,13 @@ proxy-groups:
       - d台湾
 
   - name: 日本
-    type: url-test
+    type: select
+    tolerance: 100
     use:
      - d日本
 
   - name: 美国
-    type: select
+    type: url-test
     use:
       - d美国
 
