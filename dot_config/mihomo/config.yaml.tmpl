@@ -64,10 +64,11 @@ dns:
     - 127.0.0.1
 
 proxytest: &proxytest
-  url: https://www.google.com/generate_204
+  url: https://www.google.com
   interval: 300
   timeout: 2000
-  expected-status: 204
+  expected-status: 301
+  max-failed-times: 5
 
 # 代理集合
 proxy-providers:
@@ -75,53 +76,6 @@ proxy-providers:
     type: http
     url: {{ .daili_proxy_url }}
     path: proxy-providers/daili.yaml
-    health-check:
-      enable: false
-    interval: 43200
-
-  d日本:
-    type: file
-    path: proxy-providers/daili.yaml
-    health-check:
-      enable: false
-    filter: "(?i)日|jp|japan"
-
-  d香港:
-    type: file
-    path: proxy-providers/daili.yaml
-    health-check:
-      enable: false
-    filter: "(?i)港|hk|hongkong|hong kong"
-
-  d台湾:
-    type: file
-    path: proxy-providers/daili.yaml
-    health-check:
-      enable: false
-    filter: "(?i)台|tw|taiwan"
-
-  d美国:
-    type: file
-    path: proxy-providers/daili.yaml
-    health-check:
-      enable: true
-      lazy: false
-      <<: *proxytest
-    filter: "(?i)美|us|unitedstates|united states"
-
-  d新加坡:
-    type: file
-    path: proxy-providers/daili.yaml
-    health-check:
-      enable: false
-    filter: "(?i)(新|sg|singapore)"
-
-  d其他地区:
-    type: file
-    path: proxy-providers/daili.yaml
-    health-check:
-      enable: false
-    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
 
 # 代理组
 proxy-groups:
@@ -138,34 +92,45 @@ proxy-groups:
 
   - name: 香港
     type: select
+    filter: "(?i)港|hk|hongkong|hong kong"
+    <<: *proxytest
     use:
-      - d香港
+      - daili
 
   - name: 台湾
     type: select
+    filter: "(?i)台|tw|taiwan"
+    <<: *proxytest
     use:
-      - d台湾
+      - daili
 
   - name: 日本
     type: select
-    tolerance: 100
+    filter: "(?i)日|jp|japan"
+    <<: *proxytest
     use:
-     - d日本
+     - daili
 
   - name: 美国
-    type: url-test
+    type: select
+    filter: "(?i)美|us|unitedstates|united states"
+    <<: *proxytest
     use:
-      - d美国
+      - daili
 
   - name: 新加坡
     type: select
+    filter: "(?i)(新|sg|singapore)"
+    <<: *proxytest
     use:
-      - d新加坡
+      - daili
 
   - name: 其它地区
     type: select
+    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
+    <<: *proxytest
     use:
-      - d其他地区
+      - daili
 
   - name: 全部节点
     type: select

@@ -64,10 +64,11 @@ dns:
     - 127.0.0.1
 
 proxytest: &proxytest
-  url: https://www.google.com/generate_204
+  url: https://www.google.com
   interval: 300
   timeout: 2000
-  expected-status: 204
+  expected-status: 301
+  max-failed-times: 5
 
 # 代理集合
 proxy-providers:
@@ -75,53 +76,6 @@ proxy-providers:
     type: http
     url: {{ .wuxian_proxy_url }}
     path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: false
-    interval: 43200
-
-  w日本:
-    type: file
-    path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: false
-    filter: "(?i)日|jp|japan"
-
-  w香港:
-    type: file
-    path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: false
-    filter: "(?i)港|hk|hongkong|hong kong"
-
-  w台湾:
-    type: file
-    path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: false
-    filter: "(?i)台|tw|taiwan"
-
-  w美国:
-    type: file
-    path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: true
-      lazy: false
-      <<: *proxytest
-    filter: "(?i)美|us|unitedstates|united states"
-
-  w新加坡:
-    type: file
-    path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: false
-    filter: "(?i)(新|sg|singapore)"
-
-  w其他地区:
-    type: file
-    path: proxy-providers/wuxian.yaml
-    health-check:
-      enable: false
-    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
 
 # 代理组
 proxy-groups:
@@ -138,39 +92,50 @@ proxy-groups:
 
   - name: 香港
     type: select
+    filter: "(?i)港|hk|hongkong|hong kong"
+    <<: *proxytest
     use:
-      - w香港
+      - wuxian
 
   - name: 台湾
     type: select
+    filter: "(?i)台|tw|taiwan"
+    <<: *proxytest
     use:
-      - w台湾
+      - wuxian
 
   - name: 日本
     type: select
+    filter: "(?i)日|jp|japan"
+    <<: *proxytest
     use:
-     - w日本
+     - wuxian
 
   - name: 美国
-    type: url-test
+    type: select
+    filter: "(?i)美|us|unitedstates|united states"
+    <<: *proxytest
     use:
-      - w美国
+      - wuxian
 
   - name: 新加坡
     type: select
+    filter: "(?i)(新|sg|singapore)"
+    <<: *proxytest
     use:
-      - w新加坡
+      - wuxian
 
   - name: 其它地区
     type: select
+    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
+    <<: *proxytest
     use:
-      - w其他地区
+      - wuxian
 
   - name: 全部节点
     type: select
     use:
      - wuxian
-
 
 ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text, proxy: wuxianproxy}
 ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text, proxy: wuxianproxy}
