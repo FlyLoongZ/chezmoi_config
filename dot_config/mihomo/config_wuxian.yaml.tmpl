@@ -33,8 +33,6 @@ global-client-fingerprint: chrome
 
 # GEOIP 数据模式
 geodata-mode: true
-# GEO 文件加载模式
-geodata-loader: standard
 # 自动更新 GEO
 geo-auto-update: true
 geo-update-interval: 24
@@ -52,6 +50,7 @@ dns:
   # 启用ipv6 dns解析
   ipv6: true
   enhanced-mode: redir-host
+  cache-algorithm: arc
   respect-rules: true
   default-nameserver:
     - *localdns
