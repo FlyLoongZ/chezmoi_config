@@ -317,13 +317,13 @@ rule-providers:
 
   # 中国大陆地区域
   domestic-non_ip:
-    <<: *ruleset_classical
+    <<: *ruleset_domain
     path: rules/domestic-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/domestic.txt"
 
   # 中国大陆地区不可用服务域
   global-non_ip:
-    <<: *ruleset_classical
+    <<: *ruleset_domain
     path: rules/global-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/global.txt"
 
