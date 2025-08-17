@@ -54,23 +54,28 @@ dns:
   respect-rules: true
   default-nameserver:
     - *localdns
-  nameserver-policy:
-    "geosite:cn":
-      - *localdns
-  direct-nameserver:
-    - *localdns
   proxy-server-nameserver:
     - *localdns
   nameserver:
-    - https://1.1.1.1/dns-query
-    - https://8.8.8.8/dns-query
-    - https://9.9.9.9/dns-query
+    - *localdns
+  nameserver-policy:
+    "geosite:cn":
+      - *localdns
+    "rule-set:domestic-non_ip":
+      - *localdns
+    "geosite:!cn":
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    "rule-set:global-non_ip":
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
 
 proxytest: &proxytest
   url: https://www.google.com/generate_204
-  interval: 7200
+  interval: 0
   timeout: 2000
   max-failed-times: 5
+  lazy: true
 
 # 代理集合
 proxy-providers:
@@ -83,6 +88,21 @@ proxy-providers:
     type: http
     url: {{ .wuxian_proxy_url }}
     path: proxy-providers/wuxian.yaml
+
+proxies:
+  - name: warp
+    type: wireguard
+    dialer-proxy: dailiproxy
+    private-key: {{ .warp_private_key }}
+    public-key: {{ .warp_public_key }}
+    ip: 172.16.0.2
+    ipv6: 2606:4700:110:8c9e:210a:1e69:57ff:bed
+    server: engage.cloudflareclient.com
+    port: 2408
+    allowed-ips: ['0.0.0.0/0', '::/0']
+    reserved: CxiT
+    udp: true
+    mtu: 1280
 
 # 代理组
 proxy-groups:
@@ -97,6 +117,12 @@ proxy-groups:
       - 其它地区-daili
       - 全部节点-daili
       - DIRECT
+
+  - name: warproxy
+    type: select
+    proxies:
+      - warp
+      - dailiproxy
 
   - name: wuxianproxy
     type: select
@@ -119,8 +145,12 @@ proxy-groups:
   - name: 美国-wuxian
     type: url-test
     filter: "(?i)美国|us|unitedstates|united states"
-    <<: *proxytest
+    url: https://www.google.com/generate_204
+    interval: 7200
+    timeout: 2000
+    max-failed-times: 5
     lazy: false
+    tolerance: 100
     use:
       - wuxian
 
@@ -196,6 +226,7 @@ proxy-groups:
 
   - name: 全部节点-daili
     type: select
+
     use:
      - daili
 
@@ -390,6 +421,9 @@ rule-providers:
 
 rules:
   - DOMAIN,data.bilibili.com,REJECT
+  - IP-CIDR,1.1.1.1/32,dailiproxy
+  - IP-CIDR,8.8.8.8/32,dailiproxy
+  - IP-CIDR,9.9.9.9/32,dailiproxy
 
   # domain规则
   # 国内
@@ -404,15 +438,15 @@ rules:
   - RULE-SET,cdn-domainset,wuxianproxy
   - RULE-SET,download-domainset,wuxianproxy
   - RULE-SET,game-download-domainset,wuxianproxy
-  - RULE-SET,speedtest-domainset,dailiproxy
-  - RULE-SET,ai-non_ip,dailiproxy
-  - RULE-SET,apple-services-non_ip,dailiproxy
+  - RULE-SET,speedtest-domainset,warproxy
+  - RULE-SET,ai-non_ip,warproxy
+  - RULE-SET,apple-services-non_ip,warproxy
   - RULE-SET,cdn-non_ip,wuxianproxy
   - RULE-SET,download-non_ip,wuxianproxy
-  - RULE-SET,global-non_ip,dailiproxy
-  - RULE-SET,microsoft-non_ip,dailiproxy
-  - RULE-SET,stream-non_ip,dailiproxy
-  - RULE-SET,telegram-non_ip,dailiproxy
+  - RULE-SET,global-non_ip,warproxy
+  - RULE-SET,microsoft-non_ip,warproxy
+  #- RULE-SET,stream-non_ip,warproxy
+  - RULE-SET,telegram-non_ip,warproxy
 
 
   # ip规则
@@ -422,11 +456,11 @@ rules:
   - RULE-SET,domestic-ip,DIRECT
   - RULE-SET,lan-ip,DIRECT
   # 国外
-  - RULE-SET,apple-services-ip,dailiproxy
+  - RULE-SET,apple-services-ip,warproxy
   - RULE-SET,cdn-ip,wuxianproxy
-  - RULE-SET,stream-ip,dailiproxy
-  - RULE-SET,telegram-ip,dailiproxy
-  - RULE-SET,telegram-asn-ip,dailiproxy
+  #- RULE-SET,stream-ip,warproxy
+  - RULE-SET,telegram-ip,warproxy
+  - RULE-SET,telegram-asn-ip,warproxy
   
   # GET规则
   - GEOSITE,private,DIRECT
@@ -434,6 +468,6 @@ rules:
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
 
-  - GEOSITE,geolocation-!cn,dailiproxy
-  - MATCH,dailiproxy
+  - GEOSITE,geolocation-!cn,warproxy
+  - MATCH,warproxy
 
