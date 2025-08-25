@@ -25,6 +25,12 @@ external-ui: zashboard
 # 外部用户界面下载地址
 external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
 
+profile:
+  # 储存 API 对策略组的选择，以供下次启动时使用
+  store-selected: true
+
+# 统一延迟
+unified-delay: true
 # tcp 并发
 tcp-concurrent: true
 
@@ -38,10 +44,10 @@ geo-auto-update: true
 geo-update-interval: 24
 # 自定义 GEO 下载地址
 geox-url:
-  geoip: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
-  geosite: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
-  mmdb: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
-  asn: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb
+  geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
+  geosite: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
+  mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb
+  asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
 
 localdns: &localdns 127.0.0.1
 dns:
@@ -71,11 +77,12 @@ dns:
       - https://8.8.8.8/dns-query
 
 proxytest: &proxytest
-  url: https://www.google.com/generate_204
+  url: https://cp.cloudflare.com
   interval: 0
   timeout: 2000
   max-failed-times: 5
   lazy: true
+  expected-status: 204
 
 # 代理集合
 proxy-providers:
@@ -83,11 +90,32 @@ proxy-providers:
     type: http
     url: {{ .daili_proxy_url }}
     path: proxy-providers/daili.yaml
+    interval: 43200
+    proxy: DIRECT
+    exclude-type: hysteria2
+    override:
+      udp-over-tcp: true
+      udp-over-tcp-version: 2
 
-  wuxian:
+  wuxian1:
     type: http
-    url: {{ .wuxian_proxy_url }}
-    path: proxy-providers/wuxian.yaml
+    url: {{ .wuxian1_proxy_url }}
+    path: proxy-providers/wuxian1.yaml
+    interval: 43200
+    proxy: DIRECT
+    exclude-type: hysteria2
+    override:
+      additional-suffix: w1
+
+  wuxian2:
+    type: http
+    url: {{ .wuxian2_proxy_url }}
+    path: proxy-providers/wuxian2.yaml
+    interval: 43200
+    proxy: DIRECT
+    exclude-type: hysteria2
+    override:
+      additional-suffix: w2
 
 proxies:
   - name: warp
@@ -134,6 +162,7 @@ proxy-groups:
       - 台湾-wuxian
       - 其它地区-wuxian
       - 全部节点-wuxian
+      - dailiproxy
 
   - name: 美国-daili
     type: select
@@ -150,9 +179,10 @@ proxy-groups:
     timeout: 2000
     max-failed-times: 5
     lazy: false
-    tolerance: 100
+    tolerance: 200
     use:
-      - wuxian
+      - wuxian1
+      - wuxian2
 
   - name: 日本-daili
     type: select
@@ -166,7 +196,8 @@ proxy-groups:
     filter: "(?i)日本|jp|japan"
     <<: *proxytest
     use:
-     - wuxian
+     - wuxian1
+     - wuxian2
 
   - name: 新加坡-daili
     type: select
@@ -180,7 +211,8 @@ proxy-groups:
     filter: "(?i)(新加坡|sg|singapore)"
     <<: *proxytest
     use:
-      - wuxian
+      - wuxian1
+      - wuxian2
 
   - name: 香港-daili
     type: select
@@ -194,7 +226,8 @@ proxy-groups:
     filter: "(?i)香港|hk|hongkong|hong kong"
     <<: *proxytest
     use:
-      - wuxian
+      - wuxian1
+      - wuxian2
 
   - name: 台湾-daili
     type: select
@@ -208,7 +241,8 @@ proxy-groups:
     filter: "(?i)台湾|tw|taiwan"
     <<: *proxytest
     use:
-      - wuxian
+      - wuxian1
+      - wuxian2
 
   - name: 其它地区-daili
     type: select
@@ -222,7 +256,8 @@ proxy-groups:
     filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|香港|hk|hongkong|台湾|tw|taiwan|日本|jp|japan|新加坡|sg|singapore|美国|us|unitedstates)).*"
     <<: *proxytest
     use:
-      - wuxian
+      - wuxian1
+      - wuxian2
 
   - name: 全部节点-daili
     type: select
@@ -233,7 +268,8 @@ proxy-groups:
   - name: 全部节点-wuxian
     type: select
     use:
-     - wuxian
+     - wuxian1
+     - wuxian2
 
 ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text, proxy: dailiproxy}
 ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text, proxy: dailiproxy}
@@ -424,6 +460,16 @@ rules:
   - IP-CIDR,1.1.1.1/32,dailiproxy
   - IP-CIDR,8.8.8.8/32,dailiproxy
   - IP-CIDR,9.9.9.9/32,dailiproxy
+  # Youtube
+  - DOMAIN-SUFFIX,googlevideo.com,wuxianproxy
+  # Spotify
+  - DOMAIN-SUFFIX,spotifycdn.com,wuxianproxy
+  - DOMAIN-SUFFIX,scdn.co,wuxianproxy
+  # Twitch
+  - DOMAIN-SUFFIX,jtvnw.net,wuxianproxy
+  - DOMAIN-SUFFIX,ttvnw.net,wuxianproxy
+  - DOMAIN-SUFFIX,twitchcdn.net,wuxianproxy
+  - DOMAIN-SUFFIX,twitchsvc.net,wuxianproxy
 
   # domain规则
   # 国内
