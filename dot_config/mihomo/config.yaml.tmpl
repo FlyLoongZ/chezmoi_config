@@ -105,7 +105,7 @@ proxy-providers:
     proxy: DIRECT
     exclude-type: hysteria2
     override:
-      additional-suffix: w1
+      additional-suffix: -w1
 
   wuxian2:
     type: http
@@ -115,7 +115,7 @@ proxy-providers:
     proxy: DIRECT
     exclude-type: hysteria2
     override:
-      additional-suffix: w2
+      additional-suffix: -w2
 
 proxies:
   - name: warp
@@ -123,14 +123,61 @@ proxies:
     dialer-proxy: dailiproxy
     private-key: {{ .warp_private_key }}
     public-key: {{ .warp_public_key }}
-    ip: 172.16.0.2
-    ipv6: 2606:4700:110:8c9e:210a:1e69:57ff:bed
+    ip: 172.16.0.2/32
+    ipv6: 2606:4700:110:8c9e:210a:1e69:57ff:bed/128
     server: engage.cloudflareclient.com
     port: 2408
     allowed-ips: ['0.0.0.0/0', '::/0']
     reserved: CxiT
     udp: true
-    mtu: 1280
+    mtu: 1420
+
+  - name: xiaoji-vl
+    type: vless
+    server: {{ .xiaoji_server_ip }}
+    port: 7878
+    udp: true
+    uuid: {{ .xiaoji_uuid }}
+    flow: xtls-rprx-vision
+    packet-encoding: xudp
+    tls: true
+    servername: aws.amazon.com
+    reality-opts:
+      public-key: {{ .xiaoji_public_key }}
+      short-id: {{ .xiaoji_short_id }}
+
+  - name: xiaoji-vlcdn
+    type: vless
+    dialer-proxy: wuxianproxy
+    server: {{ .xiaoji_server }}
+    port: 2096
+    udp: true
+    uuid: {{ .xiaoji_uuid_2 }}
+    packet-encoding: xudp
+    tls: true
+    servername: {{ .xiaoji_server }}
+    network: ws
+    smux:
+      enabled: true
+      padding: true
+      max-connections: 4
+      min-streams: 4
+
+  - name: xiaoji-ss
+    type: ss
+    dialer-proxy: wuxianproxy
+    server: {{ .xiaoji_server_ip }}
+    port: 7879
+    cipher: 2022-blake3-chacha20-poly1305
+    password: {{ .xiaoji_jp_password }}
+    udp: true
+    udp-over-tcp: true
+    udp-over-tcp-version: 2
+    smux:
+      enabled: true
+      padding: true
+      max-connections: 4
+      min-streams: 4
 
 # 代理组
 proxy-groups:
@@ -145,12 +192,7 @@ proxy-groups:
       - 其它地区-daili
       - 全部节点-daili
       - DIRECT
-
-  - name: warproxy
-    type: select
-    proxies:
-      - warp
-      - dailiproxy
+      - xiaoji-vl
 
   - name: wuxianproxy
     type: select
@@ -163,6 +205,21 @@ proxy-groups:
       - 其它地区-wuxian
       - 全部节点-wuxian
       - dailiproxy
+      - xiaoji-vl
+
+  - name: warproxy
+    type: select
+    proxies:
+      - warp
+      - dailiproxy
+      - protonproxy
+
+  - name: protonproxy
+    type: select
+    proxies:
+      - xiaoji-vlcdn
+      - xiaoji-ss
+      - wuxianproxy
 
   - name: 美国-daili
     type: select
@@ -172,7 +229,8 @@ proxy-groups:
       - daili
 
   - name: 美国-wuxian
-    type: url-test
+    type: load-balance
+    strategy: round-robin
     filter: "(?i)美国|us|unitedstates|united states"
     url: https://www.google.com/generate_204
     interval: 7200
@@ -207,7 +265,8 @@ proxy-groups:
       - daili
 
   - name: 新加坡-wuxian
-    type: select
+    type: load-balance
+    strategy: round-robin
     filter: "(?i)(新加坡|sg|singapore)"
     <<: *proxytest
     use:
@@ -457,19 +516,21 @@ rule-providers:
 
 rules:
   - DOMAIN,data.bilibili.com,REJECT
+  - DOMAIN-SUFFIX,smnet.studio,protonproxy
+  - DOMAIN-SUFFIX,server.alice.dns-dynamic.net,dailiproxy
+  - DOMAIN-SUFFIX,githubusercontent.com,protonproxy
   - IP-CIDR,1.1.1.1/32,dailiproxy
   - IP-CIDR,8.8.8.8/32,dailiproxy
-  - IP-CIDR,9.9.9.9/32,dailiproxy
   # Youtube
-  - DOMAIN-SUFFIX,googlevideo.com,wuxianproxy
+  - DOMAIN-SUFFIX,googlevideo.com,protonproxy
   # Spotify
-  - DOMAIN-SUFFIX,spotifycdn.com,wuxianproxy
-  - DOMAIN-SUFFIX,scdn.co,wuxianproxy
+  - DOMAIN-SUFFIX,spotifycdn.com,protonproxy
+  - DOMAIN-SUFFIX,scdn.co,protonproxy
   # Twitch
-  - DOMAIN-SUFFIX,jtvnw.net,wuxianproxy
-  - DOMAIN-SUFFIX,ttvnw.net,wuxianproxy
-  - DOMAIN-SUFFIX,twitchcdn.net,wuxianproxy
-  - DOMAIN-SUFFIX,twitchsvc.net,wuxianproxy
+  - DOMAIN-SUFFIX,jtvnw.net,protonproxy
+  - DOMAIN-SUFFIX,ttvnw.net,protonproxy
+  - DOMAIN-SUFFIX,twitchcdn.net,protonproxy
+  - DOMAIN-SUFFIX,twitchsvc.net,protonproxy
 
   # domain规则
   # 国内
@@ -481,19 +542,18 @@ rules:
   - RULE-SET,lan-non_ip,DIRECT
   - RULE-SET,microsoft-cdn-non_ip,DIRECT
   # 国外
-  - RULE-SET,cdn-domainset,wuxianproxy
-  - RULE-SET,download-domainset,wuxianproxy
-  - RULE-SET,game-download-domainset,wuxianproxy
+  - RULE-SET,cdn-domainset,protonproxy
+  - RULE-SET,download-domainset,protonproxy
+  - RULE-SET,game-download-domainset,protonproxy
   - RULE-SET,speedtest-domainset,warproxy
   - RULE-SET,ai-non_ip,warproxy
   - RULE-SET,apple-services-non_ip,warproxy
-  - RULE-SET,cdn-non_ip,wuxianproxy
-  - RULE-SET,download-non_ip,wuxianproxy
+  - RULE-SET,cdn-non_ip,protonproxy
+  - RULE-SET,download-non_ip,protonproxy
   - RULE-SET,global-non_ip,warproxy
   - RULE-SET,microsoft-non_ip,warproxy
   #- RULE-SET,stream-non_ip,warproxy
-  - RULE-SET,telegram-non_ip,warproxy
-
+  - RULE-SET,telegram-non_ip,protonproxy
 
   # ip规则
   # 国内
@@ -503,10 +563,10 @@ rules:
   - RULE-SET,lan-ip,DIRECT
   # 国外
   - RULE-SET,apple-services-ip,warproxy
-  - RULE-SET,cdn-ip,wuxianproxy
+  - RULE-SET,cdn-ip,protonproxy
   #- RULE-SET,stream-ip,warproxy
-  - RULE-SET,telegram-ip,warproxy
-  - RULE-SET,telegram-asn-ip,warproxy
+  - RULE-SET,telegram-ip,protonproxy
+  - RULE-SET,telegram-asn-ip,protonproxy
   
   # GET规则
   - GEOSITE,private,DIRECT
