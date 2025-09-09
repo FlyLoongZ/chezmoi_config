@@ -65,14 +65,7 @@ dns:
   nameserver:
     - *localdns
   nameserver-policy:
-    "geosite:cn":
-      - *localdns
-    "rule-set:domestic-non_ip":
-      - *localdns
     "geosite:!cn":
-      - https://1.1.1.1/dns-query
-      - https://8.8.8.8/dns-query
-    "rule-set:global-non_ip":
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
 
@@ -81,7 +74,6 @@ proxytest: &proxytest
   interval: 0
   timeout: 2000
   max-failed-times: 5
-  lazy: true
   expected-status: 204
 
 # 代理集合
@@ -150,18 +142,17 @@ proxies:
     type: vless
     dialer-proxy: wuxianproxy
     server: {{ .xiaoji_server }}
-    port: 2096
+    port: 443
     udp: true
     uuid: {{ .xiaoji_uuid_2 }}
     packet-encoding: xudp
     tls: true
-    servername: {{ .xiaoji_server }}
     network: ws
+    servername: {{ .xiaoji_server }}
     smux:
       enabled: true
-      padding: true
       max-connections: 4
-      min-streams: 4
+      min-streams: 2
 
   - name: xiaoji-ss
     type: ss
@@ -175,12 +166,25 @@ proxies:
     udp-over-tcp-version: 2
     smux:
       enabled: true
-      padding: true
       max-connections: 4
-      min-streams: 4
+      min-streams: 2
 
 # 代理组
 proxy-groups:
+  - name: warproxy
+    type: select
+    proxies:
+      - warp
+      - dailiproxy
+      - protonproxy
+
+  - name: protonproxy
+    type: select
+    proxies:
+      - xiaoji-vlcdn
+      - xiaoji-ss
+      - wuxianproxy
+
   - name: dailiproxy
     type: select
     proxies:
@@ -207,20 +211,6 @@ proxy-groups:
       - dailiproxy
       - xiaoji-vl
 
-  - name: warproxy
-    type: select
-    proxies:
-      - warp
-      - dailiproxy
-      - protonproxy
-
-  - name: protonproxy
-    type: select
-    proxies:
-      - xiaoji-vlcdn
-      - xiaoji-ss
-      - wuxianproxy
-
   - name: 美国-daili
     type: select
     filter: "(?i)美国|us|unitedstates|united states"
@@ -232,12 +222,7 @@ proxy-groups:
     type: load-balance
     strategy: round-robin
     filter: "(?i)美国|us|unitedstates|united states"
-    url: https://www.google.com/generate_204
-    interval: 7200
-    timeout: 2000
-    max-failed-times: 5
-    lazy: false
-    tolerance: 200
+    <<: *proxytest
     use:
       - wuxian1
       - wuxian2
@@ -412,13 +397,13 @@ rule-providers:
 
   # 中国大陆地区域
   domestic-non_ip:
-    <<: *ruleset_domain
+    <<: *ruleset_classical
     path: rules/domestic-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/domestic.txt"
 
   # 中国大陆地区不可用服务域
   global-non_ip:
-    <<: *ruleset_domain
+    <<: *ruleset_classical
     path: rules/global-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/global.txt"
 
