@@ -15,7 +15,7 @@ bindkey  "^[[6~"  end-of-history
 
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
-eval "$(atuin init zsh)"
+eval "$(atuin init zsh --disable-up-arrow)"
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
