@@ -70,7 +70,7 @@ dns:
       - https://8.8.8.8/dns-query
 
 proxytest: &proxytest
-  url: https://cp.cloudflare.com
+  url: https://www.gstatic.com/generate_204
   interval: 0
   timeout: 2000
   max-failed-times: 5
@@ -85,9 +85,6 @@ proxy-providers:
     interval: 43200
     proxy: DIRECT
     exclude-type: hysteria2
-    override:
-      udp-over-tcp: true
-      udp-over-tcp-version: 2
 
   wuxian1:
     type: http
@@ -122,7 +119,7 @@ proxies:
     allowed-ips: ['0.0.0.0/0', '::/0']
     reserved: CxiT
     udp: true
-    mtu: 1420
+    mtu: 1280
 
   - name: xiaoji-vl
     type: vless
@@ -133,7 +130,7 @@ proxies:
     flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
-    servername: aws.amazon.com
+    servername: {{ .xiaoji_sni }}
     reality-opts:
       public-key: {{ .xiaoji_public_key }}
       short-id: {{ .xiaoji_short_id }}
@@ -149,10 +146,6 @@ proxies:
     tls: true
     network: ws
     servername: {{ .xiaoji_server }}
-    smux:
-      enabled: true
-      max-connections: 4
-      min-streams: 2
 
   - name: xiaoji-ss
     type: ss
@@ -164,10 +157,6 @@ proxies:
     udp: true
     udp-over-tcp: true
     udp-over-tcp-version: 2
-    smux:
-      enabled: true
-      max-connections: 4
-      min-streams: 2
 
 # 代理组
 proxy-groups:
@@ -177,6 +166,7 @@ proxy-groups:
       - warp
       - dailiproxy
       - protonproxy
+      - xiaoji-vl
 
   - name: protonproxy
     type: select
@@ -184,6 +174,7 @@ proxy-groups:
       - xiaoji-vlcdn
       - xiaoji-ss
       - wuxianproxy
+      - xiaoji-vl
 
   - name: dailiproxy
     type: select
@@ -235,7 +226,8 @@ proxy-groups:
      - daili
 
   - name: 日本-wuxian
-    type: select
+    type: load-balance
+    strategy: consistent-hashing
     filter: "(?i)日本|jp|japan"
     <<: *proxytest
     use:
@@ -266,7 +258,8 @@ proxy-groups:
       - daili
 
   - name: 香港-wuxian
-    type: select
+    type: load-balance
+    strategy: round-robin
     filter: "(?i)香港|hk|hongkong|hong kong"
     <<: *proxytest
     use:
@@ -501,6 +494,7 @@ rule-providers:
 
 rules:
   - DOMAIN,data.bilibili.com,REJECT
+  - DOMAIN-SUFFIX,mcdn.bilivideo.cn,REJECT
   - DOMAIN-SUFFIX,smnet.studio,protonproxy
   - DOMAIN-SUFFIX,server.alice.dns-dynamic.net,dailiproxy
   - DOMAIN-SUFFIX,githubusercontent.com,protonproxy
@@ -516,6 +510,8 @@ rules:
   - DOMAIN-SUFFIX,ttvnw.net,protonproxy
   - DOMAIN-SUFFIX,twitchcdn.net,protonproxy
   - DOMAIN-SUFFIX,twitchsvc.net,protonproxy
+  # google cdn
+  - DOMAIN-SUFFIX,gvt1.com,DIRECT
 
   # domain规则
   # 国内
@@ -538,7 +534,7 @@ rules:
   - RULE-SET,global-non_ip,warproxy
   - RULE-SET,microsoft-non_ip,warproxy
   #- RULE-SET,stream-non_ip,warproxy
-  - RULE-SET,telegram-non_ip,protonproxy
+  - RULE-SET,telegram-non_ip,warproxy
 
   # ip规则
   # 国内
@@ -550,8 +546,8 @@ rules:
   - RULE-SET,apple-services-ip,warproxy
   - RULE-SET,cdn-ip,protonproxy
   #- RULE-SET,stream-ip,warproxy
-  - RULE-SET,telegram-ip,protonproxy
-  - RULE-SET,telegram-asn-ip,protonproxy
+  - RULE-SET,telegram-ip,warproxy
+  - RULE-SET,telegram-asn-ip,warproxy
   
   # GET规则
   - GEOSITE,private,DIRECT
