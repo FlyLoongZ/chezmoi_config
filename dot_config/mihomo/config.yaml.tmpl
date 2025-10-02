@@ -82,9 +82,11 @@ proxy-providers:
     type: http
     url: {{ .daili_proxy_url }}
     path: proxy-providers/daili.yaml
-    interval: 43200
+    interval: 0
     proxy: DIRECT
     exclude-type: hysteria2
+    override:
+      udp-over-tcp: true
 
   wuxian1:
     type: http
@@ -93,18 +95,6 @@ proxy-providers:
     interval: 43200
     proxy: DIRECT
     exclude-type: hysteria2
-    override:
-      additional-suffix: -w1
-
-  wuxian2:
-    type: http
-    url: {{ .wuxian2_proxy_url }}
-    path: proxy-providers/wuxian2.yaml
-    interval: 43200
-    proxy: DIRECT
-    exclude-type: hysteria2
-    override:
-      additional-suffix: -w2
 
 proxies:
   - name: warp
@@ -113,68 +103,63 @@ proxies:
     private-key: {{ .warp_private_key }}
     public-key: {{ .warp_public_key }}
     ip: 172.16.0.2/32
-    ipv6: 2606:4700:110:8c9e:210a:1e69:57ff:bed/128
+    ipv6: {{ .warp_ipv6 }}
     server: engage.cloudflareclient.com
-    port: 2408
+    port: 4500
     allowed-ips: ['0.0.0.0/0', '::/0']
-    reserved: CxiT
     udp: true
     mtu: 1280
 
-  - name: xiaoji-vl
+  - name: vless-us
     type: vless
-    server: {{ .xiaoji_server_ip }}
+    server: {{ .vless_server_ip }}
     port: 7878
     udp: true
-    uuid: {{ .xiaoji_uuid }}
+    uuid: {{ .vless_us_uuid }}
     flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
-    servername: {{ .xiaoji_sni }}
+    servername: {{ .vless_sni }}
+    encryption: {{ .vless_us_enc }}
     reality-opts:
-      public-key: {{ .xiaoji_public_key }}
-      short-id: {{ .xiaoji_short_id }}
+      public-key: {{ .vless_public_key }}
+      short-id: {{ .vless_short_id }}
 
-  - name: xiaoji-vlcdn
+  - name: vless-jp
     type: vless
-    dialer-proxy: wuxianproxy
-    server: {{ .xiaoji_server }}
-    port: 443
+    server: {{ .vless_server_ip }}
+    port: 7879
     udp: true
-    uuid: {{ .xiaoji_uuid_2 }}
+    uuid: {{ .vless_jp_uuid }}
+    flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
-    network: ws
-    servername: {{ .xiaoji_server }}
-
-  - name: xiaoji-ss
-    type: ss
-    dialer-proxy: wuxianproxy
-    server: {{ .xiaoji_server_ip }}
-    port: 7879
-    cipher: 2022-blake3-chacha20-poly1305
-    password: {{ .xiaoji_jp_password }}
-    udp: true
-    udp-over-tcp: true
-    udp-over-tcp-version: 2
+    servername: {{ .vless_sni }}
+    encryption: {{ .vless_jp_enc }}
+    reality-opts:
+      public-key: {{ .vless_public_key }}
+      short-id: {{ .vless_short_id }}
 
 # 代理组
 proxy-groups:
-  - name: warproxy
+  - name: mainproxy
     type: select
     proxies:
       - warp
       - dailiproxy
-      - protonproxy
-      - xiaoji-vl
+      - cdnproxy
+      - vless-us
+      - vless-jp
+      - DIRECT
 
-  - name: protonproxy
+  - name: cdnproxy
     type: select
     proxies:
-      - xiaoji-vlcdn
-      - xiaoji-ss
       - wuxianproxy
-      - xiaoji-vl
+      - dailiproxy
+      - vless-jp
+      - vless-us
+      - DIRECT
 
   - name: dailiproxy
     type: select
@@ -186,8 +171,6 @@ proxy-groups:
       - 台湾-daili
       - 其它地区-daili
       - 全部节点-daili
-      - DIRECT
-      - xiaoji-vl
 
   - name: wuxianproxy
     type: select
@@ -199,8 +182,6 @@ proxy-groups:
       - 台湾-wuxian
       - 其它地区-wuxian
       - 全部节点-wuxian
-      - dailiproxy
-      - xiaoji-vl
 
   - name: 美国-daili
     type: select
@@ -210,13 +191,11 @@ proxy-groups:
       - daili
 
   - name: 美国-wuxian
-    type: load-balance
-    strategy: round-robin
+    type: select
     filter: "(?i)美国|us|unitedstates|united states"
     <<: *proxytest
     use:
       - wuxian1
-      - wuxian2
 
   - name: 日本-daili
     type: select
@@ -226,13 +205,11 @@ proxy-groups:
      - daili
 
   - name: 日本-wuxian
-    type: load-balance
-    strategy: consistent-hashing
+    type: select
     filter: "(?i)日本|jp|japan"
     <<: *proxytest
     use:
      - wuxian1
-     - wuxian2
 
   - name: 新加坡-daili
     type: select
@@ -242,13 +219,11 @@ proxy-groups:
       - daili
 
   - name: 新加坡-wuxian
-    type: load-balance
-    strategy: round-robin
+    type: select
     filter: "(?i)(新加坡|sg|singapore)"
     <<: *proxytest
     use:
       - wuxian1
-      - wuxian2
 
   - name: 香港-daili
     type: select
@@ -258,13 +233,11 @@ proxy-groups:
       - daili
 
   - name: 香港-wuxian
-    type: load-balance
-    strategy: round-robin
+    type: select
     filter: "(?i)香港|hk|hongkong|hong kong"
     <<: *proxytest
     use:
       - wuxian1
-      - wuxian2
 
   - name: 台湾-daili
     type: select
@@ -279,7 +252,6 @@ proxy-groups:
     <<: *proxytest
     use:
       - wuxian1
-      - wuxian2
 
   - name: 其它地区-daili
     type: select
@@ -294,7 +266,6 @@ proxy-groups:
     <<: *proxytest
     use:
       - wuxian1
-      - wuxian2
 
   - name: 全部节点-daili
     type: select
@@ -306,11 +277,10 @@ proxy-groups:
     type: select
     use:
      - wuxian1
-     - wuxian2
 
-ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text, proxy: dailiproxy}
-ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text, proxy: dailiproxy}
-ruleset_classical: &ruleset_classical {type: http, interval: 43200, behavior: classical, format: text, proxy: dailiproxy}
+ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text}
+ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text}
+ruleset_classical: &ruleset_classical {type: http, interval: 43200, behavior: classical, format: text}
 
 # 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
 rule-providers:
@@ -495,21 +465,21 @@ rule-providers:
 rules:
   - DOMAIN,data.bilibili.com,REJECT
   - DOMAIN-SUFFIX,mcdn.bilivideo.cn,REJECT
-  - DOMAIN-SUFFIX,smnet.studio,protonproxy
+  - DOMAIN-SUFFIX,smnet.studio,cdnproxy
   - DOMAIN-SUFFIX,server.alice.dns-dynamic.net,dailiproxy
-  - DOMAIN-SUFFIX,githubusercontent.com,protonproxy
+  - DOMAIN-SUFFIX,githubusercontent.com,cdnproxy
   - IP-CIDR,1.1.1.1/32,dailiproxy
   - IP-CIDR,8.8.8.8/32,dailiproxy
   # Youtube
-  - DOMAIN-SUFFIX,googlevideo.com,protonproxy
+  - DOMAIN-SUFFIX,googlevideo.com,cdnproxy
   # Spotify
-  - DOMAIN-SUFFIX,spotifycdn.com,protonproxy
-  - DOMAIN-SUFFIX,scdn.co,protonproxy
+  - DOMAIN-SUFFIX,spotifycdn.com,cdnproxy
+  - DOMAIN-SUFFIX,scdn.co,cdnproxy
   # Twitch
-  - DOMAIN-SUFFIX,jtvnw.net,protonproxy
-  - DOMAIN-SUFFIX,ttvnw.net,protonproxy
-  - DOMAIN-SUFFIX,twitchcdn.net,protonproxy
-  - DOMAIN-SUFFIX,twitchsvc.net,protonproxy
+  - DOMAIN-SUFFIX,jtvnw.net,cdnproxy
+  - DOMAIN-SUFFIX,ttvnw.net,cdnproxy
+  - DOMAIN-SUFFIX,twitchcdn.net,cdnproxy
+  - DOMAIN-SUFFIX,twitchsvc.net,cdnproxy
   # google cdn
   - DOMAIN-SUFFIX,gvt1.com,DIRECT
 
@@ -523,18 +493,18 @@ rules:
   - RULE-SET,lan-non_ip,DIRECT
   - RULE-SET,microsoft-cdn-non_ip,DIRECT
   # 国外
-  - RULE-SET,cdn-domainset,protonproxy
-  - RULE-SET,download-domainset,protonproxy
-  - RULE-SET,game-download-domainset,protonproxy
-  - RULE-SET,speedtest-domainset,warproxy
-  - RULE-SET,ai-non_ip,warproxy
-  - RULE-SET,apple-services-non_ip,warproxy
-  - RULE-SET,cdn-non_ip,protonproxy
-  - RULE-SET,download-non_ip,protonproxy
-  - RULE-SET,global-non_ip,warproxy
-  - RULE-SET,microsoft-non_ip,warproxy
-  #- RULE-SET,stream-non_ip,warproxy
-  - RULE-SET,telegram-non_ip,warproxy
+  - RULE-SET,cdn-domainset,cdnproxy
+  - RULE-SET,download-domainset,cdnproxy
+  - RULE-SET,game-download-domainset,cdnproxy
+  - RULE-SET,speedtest-domainset,mainproxy
+  - RULE-SET,ai-non_ip,mainproxy
+  - RULE-SET,apple-services-non_ip,mainproxy
+  - RULE-SET,cdn-non_ip,cdnproxy
+  - RULE-SET,download-non_ip,cdnproxy
+  - RULE-SET,global-non_ip,mainproxy
+  - RULE-SET,microsoft-non_ip,mainproxy
+  #- RULE-SET,stream-non_ip,mainproxy
+  - RULE-SET,telegram-non_ip,mainproxy
 
   # ip规则
   # 国内
@@ -543,11 +513,11 @@ rules:
   - RULE-SET,domestic-ip,DIRECT
   - RULE-SET,lan-ip,DIRECT
   # 国外
-  - RULE-SET,apple-services-ip,warproxy
-  - RULE-SET,cdn-ip,protonproxy
-  #- RULE-SET,stream-ip,warproxy
-  - RULE-SET,telegram-ip,warproxy
-  - RULE-SET,telegram-asn-ip,warproxy
+  - RULE-SET,apple-services-ip,mainproxy
+  - RULE-SET,cdn-ip,cdnproxy
+  #- RULE-SET,stream-ip,mainproxy
+  - RULE-SET,telegram-ip,mainproxy
+  - RULE-SET,telegram-asn-ip,mainproxy
   
   # GET规则
   - GEOSITE,private,DIRECT
@@ -555,6 +525,6 @@ rules:
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
 
-  - GEOSITE,geolocation-!cn,warproxy
-  - MATCH,warproxy
+  - GEOSITE,geolocation-!cn,mainproxy
+  - MATCH,mainproxy
 
