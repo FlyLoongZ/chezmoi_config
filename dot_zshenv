@@ -1,1 +1,4 @@
 export EDITOR="kate -b"
+
+# uv
+export PATH="/home/c137arch/.local/share/../bin:$PATH"
