@@ -68,13 +68,6 @@ dns:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
 
-proxytest: &proxytest
-  url: https://www.gstatic.com/generate_204
-  interval: 0
-  timeout: 2000
-  max-failed-times: 5
-  expected-status: 204
-
 # 代理集合
 proxy-providers:
   daili:
@@ -102,10 +95,10 @@ proxies:
     udp: true
     mtu: 1280
 
-  - name: vless-us
+  - name: vless-us-warp
     type: vless
-    server: {{ .vless_server_ip }}
-    port: 7878
+    server: {{ .vless_server }}
+    port: 443
     udp: true
     uuid: {{ .vless_us_uuid }}
     flow: xtls-rprx-vision
@@ -116,11 +109,12 @@ proxies:
     reality-opts:
       public-key: {{ .vless_public_key }}
       short-id: {{ .vless_short_id }}
+      support-x25519mlkem768: true
 
-  - name: vless-jp
+  - name: vless-us
     type: vless
-    server: {{ .vless_server_ip }}
-    port: 7879
+    server: {{ .vless_server }}
+    port: 8443
     udp: true
     uuid: {{ .vless_jp_uuid }}
     flow: xtls-rprx-vision
@@ -131,57 +125,46 @@ proxies:
     reality-opts:
       public-key: {{ .vless_public_key }}
       short-id: {{ .vless_short_id }}
+      support-x25519mlkem768: true
 
-  - name: tuic-us
-    server: {{ .vless_server_ip }}
-    port: 10078
-    type: tuic
-    uuid: {{ .tuic_uuid }}
-    password: {{ .tuic_passwd }}
-    certificate: tuic.pem
-    private-key: tuic.key
-    alpn:
-      - h3
-    disable-sni: true
-    reduce-rtt: false
-    request-timeout: 8000
-    udp-relay-mode: native
-    congestion-controller: bbr
-    sni: {{ .hy2_sni }}
 
   - name: hy2-us
-    server: {{ .vless_server_ip }}
-    port: 7853
+    server: {{ .vless_server }}
+    port: 443
     type: hysteria2
     password: {{ .hy2_passwd }}
     sni: {{ .hy2_sni }}
     fingerprint: {{ .hy2_fingerprint }}
-    skip-cert-verify: false
     alpn:
       - h3
+
+proxytest: &proxytest
+  url: https://www.gstatic.com/generate_204
+  interval: 0
+  timeout: 2000
+  max-failed-times: 5
+  expected-status: 204
 
 # 代理组
 proxy-groups:
   - name: mainproxy
     type: select
     proxies:
+      - vless-us-warp
+      - vless-us
+      - hy2-us
       - warp
       - dailiproxy
       - cdnproxy
-      - vless-us
-      - tuic-us
-      - hy2-us
-      - vless-jp
       - DIRECT
 
   - name: cdnproxy
     type: select
     proxies:
       - dailiproxy
+      - vless-us-warp
       - vless-us
-      - tuic-us
       - hy2-us
-      - vless-jp
       - DIRECT
 
   - name: dailiproxy
@@ -240,7 +223,7 @@ proxy-groups:
 
   - name: 全部节点
     type: select
-
+    <<: *proxytest
     use:
      - daili
 
@@ -251,12 +234,6 @@ ruleset_classical: &ruleset_classical {type: http, interval: 43200, behavior: cl
 # 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
 rule-providers:
   # === domainset规则 ===
-  # apple中国cdn域
-  apple-cdn-domainset:
-    <<: *ruleset_domain
-    path: rules/apple-cdn-domainset.txt
-    url: "https://ruleset.skk.moe/Clash/domainset/apple_cdn.txt"
-
   # 对象存储和静态资产cdn域
   cdn-domainset:
     <<: *ruleset_domain
@@ -288,24 +265,6 @@ rule-providers:
     path: rules/ai-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/ai.txt"
 
-  # apple中国cdn域
-  apple-cdn-non_ip:
-    <<: *ruleset_classical
-    path: rules/apple-cdn-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/apple_cdn.txt"
-
-  # apple中国服务域
-  apple-cn-non_ip:
-    <<: *ruleset_classical
-    path: rules/apple-cn-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/apple_cn.txt"
-
-  # apple域
-  apple-services-non_ip:
-    <<: *ruleset_classical
-    path: rules/apple-services-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/apple_services.txt"
-
   # 对象存储和静态资产cdn域
   cdn-non_ip:
     <<: *ruleset_classical
@@ -317,12 +276,6 @@ rule-providers:
    <<: *ruleset_classical
    path: rules/download-non_ip.txt
    url: https://ruleset.skk.moe/Clash/non_ip/download.txt
-
-  # 不应代理的域和进程
-  direct-non_ip:
-    <<: *ruleset_classical
-    path: rules/direct-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/direct.txt"
 
   # 中国大陆地区域
   domestic-non_ip:
@@ -336,35 +289,11 @@ rule-providers:
     path: rules/global-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/global.txt"
 
-  # LAN 域和保留TLD
-  lan-non_ip:
-    <<: *ruleset_classical
-    path: rules/lan-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/lan.txt"
-
   # 微软域
   microsoft-non_ip:
     <<: *ruleset_classical
     path: rules/microsoft-non_ip.txt
     url: "https://ruleset.skk.moe/Clash/non_ip/microsoft.txt"
-
-  # 微软中国cdn域
-  microsoft-cdn-non_ip:
-    <<: *ruleset_classical
-    path: rules/microsoft-cdn-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/microsoft_cdn.txt"
-
-  # 流媒体域
-  stream-non_ip:
-    <<: *ruleset_classical
-    path: rules/stream-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/stream.txt"
-
-  # bilibili国际域
-  stream-biliintl-non_ip:
-    <<: *ruleset_classical
-    path: rules/stream-biliintl-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/stream_biliintl.txt"
 
   # telegram域
   telegram-non_ip:
@@ -373,51 +302,6 @@ rule-providers:
     url: "https://ruleset.skk.moe/Clash/non_ip/telegram.txt"
 
   # === ip规则 ===
-  # apple ip
-  apple-services-ip:
-    <<: *ruleset_classical
-    path: rules/apple-services-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/apple_services.txt"
-
-  # 对象存储和静态资产cdn ip
-  cdn-ip:
-    <<: *ruleset_classical
-    path: rules/cdn-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/cdn.txt"
-
-  china-ip:
-    <<: *ruleset_ipcidr
-    path: rules/china-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/china_ip.txt"
-
-  china-ipv6:
-    <<: *ruleset_ipcidr
-    path: rules/china-ipv6.txt
-    url: "https://ruleset.skk.moe/Clash/ip/china_ip_ipv6.txt"
-
-  # 中国大陆广播ip
-  domestic-ip:
-    <<: *ruleset_classical
-    path: rules/domestic-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/domestic.txt"
-
-  lan-ip:
-    <<: *ruleset_classical
-    path: rules/lan-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/lan.txt"
-
-  # 流媒体ip
-  stream-ip:
-    <<: *ruleset_classical
-    path: rules/stream-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/stream.txt"
-
-  # bilibili国际ip
-  stream-biliintl-ip:
-    <<: *ruleset_classical
-    path: rules/stream-biliintl-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/stream_biliintl.txt"
-
   telegram-ip:
     <<: *ruleset_classical
     path: rules/telegram-ip.txt
@@ -429,11 +313,7 @@ rule-providers:
     url: "https://ruleset.skk.moe/Clash/ip/telegram_asn.txt"
 
 rules:
-  - DOMAIN,data.bilibili.com,REJECT
-  - DOMAIN-SUFFIX,mcdn.bilivideo.cn,REJECT
-  - DOMAIN-SUFFIX,smnet.studio,cdnproxy
-  - DOMAIN-SUFFIX,server.alice.dns-dynamic.net,dailiproxy
-  - DOMAIN-SUFFIX,githubusercontent.com,cdnproxy
+  # dns
   - IP-CIDR,1.1.1.1/32,dailiproxy
   - IP-CIDR,8.8.8.8/32,dailiproxy
   # Youtube
@@ -448,51 +328,32 @@ rules:
   - DOMAIN-SUFFIX,twitchsvc.net,cdnproxy
   # google cdn
   - DOMAIN-SUFFIX,gvt1.com,DIRECT
-  # github ssh
-  - DOMAIN-SUFFIX,ssh.github.com,cdnproxy
+  # github
+  - DOMAIN-SUFFIX,githubusercontent.com,cdnproxy
 
   # domain规则
   # 国内
-  - RULE-SET,apple-cdn-domainset,DIRECT
-  - RULE-SET,apple-cdn-non_ip,DIRECT
-  - RULE-SET,apple-cn-non_ip,DIRECT
-  - RULE-SET,direct-non_ip,DIRECT
   - RULE-SET,domestic-non_ip,DIRECT
-  - RULE-SET,lan-non_ip,DIRECT
-  - RULE-SET,microsoft-cdn-non_ip,DIRECT
+  - GEOSITE,private,DIRECT
+  - GEOSITE,CN,DIRECT
   # 国外
   - RULE-SET,cdn-domainset,cdnproxy
   - RULE-SET,download-domainset,cdnproxy
   - RULE-SET,game-download-domainset,cdnproxy
   - RULE-SET,speedtest-domainset,mainproxy
   - RULE-SET,ai-non_ip,mainproxy
-  - RULE-SET,apple-services-non_ip,mainproxy
   - RULE-SET,cdn-non_ip,cdnproxy
   - RULE-SET,download-non_ip,cdnproxy
   - RULE-SET,global-non_ip,mainproxy
   - RULE-SET,microsoft-non_ip,mainproxy
-  #- RULE-SET,stream-non_ip,mainproxy
   - RULE-SET,telegram-non_ip,mainproxy
+  - GEOSITE,geolocation-!cn,mainproxy
 
   # ip规则
-  # 国内
-  - RULE-SET,china-ip,DIRECT
-  - RULE-SET,china-ipv6,DIRECT
-  - RULE-SET,domestic-ip,DIRECT
-  - RULE-SET,lan-ip,DIRECT
-  # 国外
-  - RULE-SET,apple-services-ip,mainproxy
-  - RULE-SET,cdn-ip,cdnproxy
-  #- RULE-SET,stream-ip,mainproxy
-  - RULE-SET,telegram-ip,mainproxy
-  - RULE-SET,telegram-asn-ip,mainproxy
-
-  # GET规则
-  - GEOSITE,private,DIRECT
-  - GEOSITE,CN,DIRECT
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
-
-  - GEOSITE,geolocation-!cn,mainproxy
+  # 国外
+  - RULE-SET,telegram-ip,mainproxy
+  - RULE-SET,telegram-asn-ip,mainproxy
   - MATCH,mainproxy
 
