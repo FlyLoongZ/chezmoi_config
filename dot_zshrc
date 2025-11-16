@@ -4,6 +4,10 @@ SAVEHIST=100000
 bindkey -e
 ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
 
+zstyle :compinstall filename '~/.zshrc'
+autoload -Uz compinit
+compinit
+
 TRAPTERM () { exit }
 PROMPT="%F{white}%B[%f%F{gree}%n%f%F{white}@%f%F{045}%m%f %F{white}%~ ]%b%f%# "
 
