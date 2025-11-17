@@ -252,19 +252,7 @@ rule-providers:
     path: rules/game-download-domainset.txt
     url: "https://ruleset.skk.moe/Clash/domainset/game-download.txt"
 
-  # speedtest域
-  speedtest-domainset:
-    <<: *ruleset_domain
-    path: rules/speedtest-domainset.txt
-    url: "https://ruleset.skk.moe/Clash/domainset/speedtest.txt"
-
   # === non_ip规则 ===
-  # 包含 OpenAI、Google Gemini、Claude、Perplexity 等的域
-  ai-non_ip:
-    <<: *ruleset_classical
-    path: rules/ai-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/ai.txt"
-
   # 对象存储和静态资产cdn域
   cdn-non_ip:
     <<: *ruleset_classical
@@ -276,24 +264,6 @@ rule-providers:
    <<: *ruleset_classical
    path: rules/download-non_ip.txt
    url: https://ruleset.skk.moe/Clash/non_ip/download.txt
-
-  # 中国大陆地区域
-  domestic-non_ip:
-    <<: *ruleset_classical
-    path: rules/domestic-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/domestic.txt"
-
-  # 中国大陆地区不可用服务域
-  global-non_ip:
-    <<: *ruleset_classical
-    path: rules/global-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/global.txt"
-
-  # 微软域
-  microsoft-non_ip:
-    <<: *ruleset_classical
-    path: rules/microsoft-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/microsoft.txt"
 
   # telegram域
   telegram-non_ip:
@@ -333,19 +303,14 @@ rules:
 
   # domain规则
   # 国内
-  - RULE-SET,domestic-non_ip,DIRECT
   - GEOSITE,private,DIRECT
   - GEOSITE,CN,DIRECT
   # 国外
   - RULE-SET,cdn-domainset,cdnproxy
   - RULE-SET,download-domainset,cdnproxy
   - RULE-SET,game-download-domainset,cdnproxy
-  - RULE-SET,speedtest-domainset,mainproxy
-  - RULE-SET,ai-non_ip,mainproxy
   - RULE-SET,cdn-non_ip,cdnproxy
   - RULE-SET,download-non_ip,cdnproxy
-  - RULE-SET,global-non_ip,mainproxy
-  - RULE-SET,microsoft-non_ip,mainproxy
   - RULE-SET,telegram-non_ip,mainproxy
   - GEOSITE,geolocation-!cn,mainproxy
 
@@ -356,4 +321,3 @@ rules:
   - RULE-SET,telegram-ip,mainproxy
   - RULE-SET,telegram-asn-ip,mainproxy
   - MATCH,mainproxy
-
