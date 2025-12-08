@@ -49,6 +49,7 @@ geox-url:
   asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
 
 localdns: &localdns 127.0.0.1
+localdns_ecs: &localdns_ecs 127.0.0.1#ecs=12.99.4.123/32
 dns:
   # 启用dns模块
   enable: true
@@ -57,16 +58,21 @@ dns:
   enhanced-mode: redir-host
   cache-algorithm: arc
   respect-rules: true
+  # 默认dns, 用于解析dns服务器的域名
   default-nameserver:
     - *localdns
+  # 代理节点域名解析服务器，仅用于解析代理节点的域名
   proxy-server-nameserver:
     - *localdns
-  nameserver:
+  # 用于direct出口域名解析的dns服务器
+  direct-nameserver:
     - *localdns
+  nameserver:
+    - *localdns_ecs
   nameserver-policy:
     "geosite:!cn":
-      - https://1.1.1.1/dns-query
-      - https://8.8.8.8/dns-query
+      - 1.1.1.1
+      - 8.8.8.8
 
 # 代理集合
 proxy-providers:
@@ -75,8 +81,6 @@ proxy-providers:
     url: {{ .daili_proxy_url }}
     path: proxy-providers/daili.yaml
     interval: 0
-    proxy: DIRECT
-    exclude-type: hysteria2
     override:
       udp-over-tcp: true
       udp-over-tcp-version: 2
@@ -116,12 +120,12 @@ proxies:
     server: {{ .vless_server }}
     port: 8443
     udp: true
-    uuid: {{ .vless_jp_uuid }}
+    uuid: {{ .vless_us_uuid }}
     flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
     servername: {{ .vless_sni }}
-    encryption: {{ .vless_jp_enc }}
+    encryption: {{ .vless_us_enc }}
     reality-opts:
       public-key: {{ .vless_public_key }}
       short-id: {{ .vless_short_id }}
@@ -161,10 +165,11 @@ proxy-groups:
   - name: cdnproxy
     type: select
     proxies:
-      - dailiproxy
       - vless-us-warp
       - vless-us
       - hy2-us
+      - dailiproxy
+      - warp
       - DIRECT
 
   - name: dailiproxy
@@ -284,13 +289,10 @@ rule-providers:
 
 rules:
   # dns
-  - IP-CIDR,1.1.1.1/32,dailiproxy
-  - IP-CIDR,8.8.8.8/32,dailiproxy
+  - IP-CIDR,1.1.1.1/32,mainproxy
+  - IP-CIDR,8.8.8.8/32,mainproxy
   # Youtube
   - DOMAIN-SUFFIX,googlevideo.com,cdnproxy
-  # Spotify
-  - DOMAIN-SUFFIX,spotifycdn.com,cdnproxy
-  - DOMAIN-SUFFIX,scdn.co,cdnproxy
   # Twitch
   - DOMAIN-SUFFIX,jtvnw.net,cdnproxy
   - DOMAIN-SUFFIX,ttvnw.net,cdnproxy
