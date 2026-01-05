@@ -3,7 +3,7 @@ allow-lan: false
 # 绑定地址
 bind-address: 0.0.0.0
 # 混合端口
-mixed-port: 7890
+mixed-port: 57878
 
 # 运行模式
 mode: rule
@@ -16,7 +16,7 @@ ipv6: true
 find-process-mode: strict
 
 # 外部控制 (API)
-external-controller: 127.0.0.1:9090
+external-controller: 127.0.0.1:57890
 # API 访问密钥
 secret: "mihomo123456"
 # 外部用户界面
@@ -49,7 +49,7 @@ geox-url:
   asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
 
 localdns: &localdns 127.0.0.1
-localdns_ecs: &localdns_ecs 127.0.0.1#ecs=12.99.4.123/32
+localdns_ecs: &localdns_ecs 127.0.0.1#ecs=67.114.123.123/32
 dns:
   # 启用dns模块
   enable: true
@@ -70,9 +70,9 @@ dns:
   nameserver:
     - *localdns_ecs
   nameserver-policy:
-    "geosite:!cn":
-      - 1.1.1.1
-      - 8.8.8.8
+    "geosite:geolocation-!cn":
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
 
 # 代理集合
 proxy-providers:
@@ -86,61 +86,34 @@ proxy-providers:
       udp-over-tcp-version: 2
 
 proxies:
-  - name: warp
-    type: wireguard
-    dialer-proxy: dailiproxy
-    private-key: {{ .warp_private_key }}
-    public-key: {{ .warp_public_key }}
-    ip: 172.16.0.2/32
-    ipv6: {{ .warp_ipv6 }}
-    server: engage.cloudflareclient.com
-    port: 2408
-    allowed-ips: ['0.0.0.0/0', '::/0']
-    udp: true
-    mtu: 1280
-
   - name: vless-us-warp
     type: vless
     server: {{ .vless_server }}
     port: 443
     udp: true
-    uuid: {{ .vless_us_uuid }}
+    uuid: {{ .vless_us_uuid1 }}
     flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
-    servername: {{ .vless_sni }}
-    encryption: {{ .vless_us_enc }}
+    servername: {{ .vless_sni1 }}
     reality-opts:
       public-key: {{ .vless_public_key }}
-      short-id: {{ .vless_short_id }}
       support-x25519mlkem768: true
 
   - name: vless-us
     type: vless
     server: {{ .vless_server }}
-    port: 8443
+    port: 443
     udp: true
-    uuid: {{ .vless_us_uuid }}
+    uuid: {{ .vless_us_uuid2 }}
     flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
-    servername: {{ .vless_sni }}
+    servername: {{ .vless_sni2 }}
     encryption: {{ .vless_us_enc }}
     reality-opts:
       public-key: {{ .vless_public_key }}
-      short-id: {{ .vless_short_id }}
       support-x25519mlkem768: true
-
-
-  - name: hy2-us
-    server: {{ .vless_server }}
-    port: 443
-    type: hysteria2
-    password: {{ .hy2_passwd }}
-    sni: {{ .hy2_sni }}
-    fingerprint: {{ .hy2_fingerprint }}
-    alpn:
-      - h3
 
 proxytest: &proxytest
   url: https://www.gstatic.com/generate_204
@@ -156,8 +129,6 @@ proxy-groups:
     proxies:
       - vless-us-warp
       - vless-us
-      - hy2-us
-      - warp
       - dailiproxy
       - cdnproxy
       - DIRECT
@@ -167,9 +138,7 @@ proxy-groups:
     proxies:
       - vless-us-warp
       - vless-us
-      - hy2-us
       - dailiproxy
-      - warp
       - DIRECT
 
   - name: dailiproxy
@@ -288,9 +257,6 @@ rule-providers:
     url: "https://ruleset.skk.moe/Clash/ip/telegram_asn.txt"
 
 rules:
-  # dns
-  - IP-CIDR,1.1.1.1/32,mainproxy
-  - IP-CIDR,8.8.8.8/32,mainproxy
   # Youtube
   - DOMAIN-SUFFIX,googlevideo.com,cdnproxy
   # Twitch
