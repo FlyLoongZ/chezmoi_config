@@ -110,7 +110,6 @@ proxies:
     packet-encoding: xudp
     tls: true
     servername: {{ .vless_sni2 }}
-    encryption: {{ .vless_us_enc }}
     reality-opts:
       public-key: {{ .vless_public_key }}
       support-x25519mlkem768: true
@@ -129,21 +128,6 @@ proxy-groups:
     proxies:
       - vless-us-warp
       - vless-us
-      - dailiproxy
-      - cdnproxy
-      - DIRECT
-
-  - name: cdnproxy
-    type: select
-    proxies:
-      - vless-us-warp
-      - vless-us
-      - dailiproxy
-      - DIRECT
-
-  - name: dailiproxy
-    type: select
-    proxies:
       - 美国
       - 日本
       - 新加坡
@@ -201,84 +185,12 @@ proxy-groups:
     use:
      - daili
 
-ruleset_domain: &ruleset_domain {type: http, interval: 43200, behavior: domain, format: text}
-ruleset_ipcidr: &ruleset_ipcidr {type: http, interval: 43200, behavior: ipcidr, format: text}
-ruleset_classical: &ruleset_classical {type: http, interval: 43200, behavior: classical, format: text}
-
-# 规则解释https://blog.skk.moe/post/i-have-my-unique-surge-setup/
-rule-providers:
-  # === domainset规则 ===
-  # 对象存储和静态资产cdn域
-  cdn-domainset:
-    <<: *ruleset_domain
-    path: rules/cdn-domainset.txt
-    url: "https://ruleset.skk.moe/Clash/domainset/cdn.txt"
-
-  # 软件更新、操作系统等大文件下载的域
-  download-domainset:
-    <<: *ruleset_domain
-    path: rules/download-domainset.txt
-    url: https://ruleset.skk.moe/Clash/domainset/download.txt
-
-  # Game下载，以及Steam、Epic、Blizzard、Gog、Ubisoft、EA、Xbox、PlayStation、Riot、Bethesda等的CDN域
-  game-download-domainset:
-    <<: *ruleset_domain
-    path: rules/game-download-domainset.txt
-    url: "https://ruleset.skk.moe/Clash/domainset/game-download.txt"
-
-  # === non_ip规则 ===
-  # 对象存储和静态资产cdn域
-  cdn-non_ip:
-    <<: *ruleset_classical
-    path: rules/cdn-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/cdn.txt"
-
-  # 软件更新、操作系统等大文件下载的域
-  download-non_ip:
-   <<: *ruleset_classical
-   path: rules/download-non_ip.txt
-   url: https://ruleset.skk.moe/Clash/non_ip/download.txt
-
-  # telegram域
-  telegram-non_ip:
-    <<: *ruleset_classical
-    path: rules/telegram-non_ip.txt
-    url: "https://ruleset.skk.moe/Clash/non_ip/telegram.txt"
-
-  # === ip规则 ===
-  telegram-ip:
-    <<: *ruleset_classical
-    path: rules/telegram-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/telegram.txt"
-
-  telegram-asn-ip:
-    <<: *ruleset_classical
-    path: rules/telegram-asn-ip.txt
-    url: "https://ruleset.skk.moe/Clash/ip/telegram_asn.txt"
-
 rules:
-  # Youtube
-  - DOMAIN-SUFFIX,googlevideo.com,cdnproxy
-  # Twitch
-  - DOMAIN-SUFFIX,jtvnw.net,cdnproxy
-  - DOMAIN-SUFFIX,ttvnw.net,cdnproxy
-  - DOMAIN-SUFFIX,twitchcdn.net,cdnproxy
-  - DOMAIN-SUFFIX,twitchsvc.net,cdnproxy
-  # google cdn
-  - DOMAIN-SUFFIX,gvt1.com,DIRECT
-  # github
-  - DOMAIN-SUFFIX,githubusercontent.com,cdnproxy
-
   # domain规则
   # 国内
   - GEOSITE,private,DIRECT
   - GEOSITE,CN,DIRECT
   # 国外
-  - RULE-SET,cdn-domainset,cdnproxy
-  - RULE-SET,download-domainset,cdnproxy
-  - RULE-SET,game-download-domainset,cdnproxy
-  - RULE-SET,cdn-non_ip,cdnproxy
-  - RULE-SET,download-non_ip,cdnproxy
   - RULE-SET,telegram-non_ip,mainproxy
   - GEOSITE,geolocation-!cn,mainproxy
 
