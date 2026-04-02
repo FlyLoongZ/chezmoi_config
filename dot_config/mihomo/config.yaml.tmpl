@@ -33,9 +33,6 @@ unified-delay: true
 # tcp 并发
 tcp-concurrent: true
 
-# 全局客户端指纹
-global-client-fingerprint: chrome
-
 # GEOIP 数据模式
 geodata-mode: true
 # 自动更新 GEO
@@ -86,20 +83,6 @@ proxy-providers:
       udp-over-tcp-version: 2
 
 proxies:
-  - name: vless-us-warp
-    type: vless
-    server: {{ .vless_server }}
-    port: 443
-    udp: true
-    uuid: {{ .vless_us_uuid1 }}
-    flow: xtls-rprx-vision
-    packet-encoding: xudp
-    tls: true
-    servername: {{ .vless_sni1 }}
-    reality-opts:
-      public-key: {{ .vless_public_key }}
-      support-x25519mlkem768: true
-
   - name: vless-us
     type: vless
     server: {{ .vless_server }}
@@ -110,9 +93,70 @@ proxies:
     packet-encoding: xudp
     tls: true
     servername: {{ .vless_sni2 }}
+    client-fingerprint: chrome
     reality-opts:
       public-key: {{ .vless_public_key }}
       support-x25519mlkem768: true
+
+  - name: xhttp-allin
+    type: vless
+    server: {{ .xhttp1_server }}
+    port: 443
+    udp: true
+    uuid: {{ .xhttp_uuid }}
+    tls: true
+    network: xhttp
+    flow: xtls-rprx-vision
+    alpn:
+      - h2
+    servername: {{ .xhttp1_server }}
+    client-fingerprint: chrome
+    encryption: {{ .vless_us_enc }}
+    ech-opts:
+      enable: true
+    xhttp-opts:
+      path: {{ .xhttp_path }}
+      download-settings:
+        path: {{ .xhttp_path }}
+        server: {{ .xhttp2_server }}
+        servername: {{ .xhttp2_server }}
+        port: 443
+        tls: true
+        alpn:
+          - h2
+        ech-opts:
+          enable: true
+
+  - name: reality-up+xhttp-down
+    type: vless
+    server: {{ .vless_server }}
+    port: 443
+    udp: true
+    uuid: {{ .xhttp_uuid }}
+    flow: xtls-rprx-vision
+    packet-encoding: xudp
+    tls: true
+    network: xhttp
+    servername: {{ .vless_sni2 }}
+    client-fingerprint: chrome
+    encryption: {{ .vless_us_enc }}
+    reality-opts:
+      public-key: {{ .vless_public_key }}
+      support-x25519mlkem768: true
+    xhttp-opts:
+      path: {{ .xhttp_path }}
+      download-settings:
+        path: {{ .xhttp_path }}
+        server: {{ .xhttp2_server }}
+        servername: {{ .xhttp2_server }}
+        port: 443
+        tls: true
+        alpn:
+          - h2
+        ech-opts:
+          enable: true
+        reality-opts:
+          public-key: ""
 
 proxytest: &proxytest
   url: https://www.gstatic.com/generate_204
@@ -126,7 +170,8 @@ proxy-groups:
   - name: mainproxy
     type: select
     proxies:
-      - vless-us-warp
+      - xhttp-allin
+      - reality_up+xhttp_down
       - vless-us
       - 美国
       - 日本
@@ -185,19 +230,52 @@ proxy-groups:
     use:
      - daili
 
+rule-providers:
+  icp:
+    type: http
+    path: rules/icp.mrs
+    url: https://static-file-global.353355.xyz/rules/cn-additional-list.mrs
+    interval: 43200
+    proxy: DIRECT
+    behavior: domain
+    format: mrs
+
 rules:
+  - DOMAIN-SUFFIX,data.bilibili.com,REJECT
   # domain规则
   # 国内
   - GEOSITE,private,DIRECT
+  - RULE-SET,icp,DIRECT
   - GEOSITE,CN,DIRECT
   # 国外
-  - RULE-SET,telegram-non_ip,mainproxy
   - GEOSITE,geolocation-!cn,mainproxy
 
   # ip规则
+  # 国内
   - GEOIP,private,DIRECT
   - GEOIP,CN,DIRECT
+    ## 阿里云
+  - IP-ASN,59055,DIRECT
+  - IP-ASN,59054,DIRECT
+  - IP-ASN,59053,DIRECT
+  - IP-ASN,59052,DIRECT
+  - IP-ASN,59051,DIRECT
+  - IP-ASN,59028,DIRECT
+  - IP-ASN,45104,DIRECT
+  - IP-ASN,45103,DIRECT
+  - IP-ASN,45102,DIRECT
+  - IP-ASN,402207,DIRECT
+  - IP-ASN,402205,DIRECT
+  - IP-ASN,37963,DIRECT
+  - IP-ASN,34947,DIRECT
+  - IP-ASN,203513,DIRECT
+  - IP-ASN,134963,DIRECT
+  ## 腾讯云
+  - IP-ASN,9390,DIRECT
+  - IP-ASN,45090,DIRECT
+  - IP-ASN,137876,DIRECT
+  - IP-ASN,133478,DIRECT
+  - IP-ASN,132591,DIRECT
+  - IP-ASN,132203,DIRECT
   # 国外
-  - RULE-SET,telegram-ip,mainproxy
-  - RULE-SET,telegram-asn-ip,mainproxy
   - MATCH,mainproxy
