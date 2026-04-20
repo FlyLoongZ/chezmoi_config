@@ -33,18 +33,6 @@ unified-delay: true
 # tcp 并发
 tcp-concurrent: true
 
-# GEOIP 数据模式
-geodata-mode: true
-# 自动更新 GEO
-geo-auto-update: true
-geo-update-interval: 24
-# 自定义 GEO 下载地址
-geox-url:
-  geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
-  geosite: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
-  mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb
-  asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
-
 localdns: &localdns 127.0.0.1
 localdns_ecs: &localdns_ecs 127.0.0.1#ecs=67.114.123.123/32
 dns:
@@ -67,6 +55,8 @@ dns:
   nameserver:
     - *localdns_ecs
   nameserver-policy:
+    "rule-set":
+      - *localdns
     "geosite:geolocation-!cn":
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
@@ -103,12 +93,12 @@ proxies:
     server: {{ .xhttp1_server }}
     port: 443
     udp: true
+    packet-encoding: xudp
     uuid: {{ .xhttp_uuid }}
     tls: true
     network: xhttp
     flow: xtls-rprx-vision
-    alpn:
-      - h2
+    alpn: [h2]
     servername: {{ .xhttp1_server }}
     client-fingerprint: chrome
     encryption: {{ .vless_us_enc }}
@@ -116,16 +106,17 @@ proxies:
       enable: true
     xhttp-opts:
       path: {{ .xhttp_path }}
+      mode: auto
+      reuse-settings:
+        max-concurrency: 16-32
+        c-max-reuse-times: 0
+        h-max-request-times: 600-900
+        h-max-reusable-secs: 1800-3000
+        h-keep-alive-period: 0
       download-settings:
         path: {{ .xhttp_path }}
-        server: {{ .xhttp2_server }}
+        server: {{ .xhttp_server }}
         servername: {{ .xhttp2_server }}
-        port: 443
-        tls: true
-        alpn:
-          - h2
-        ech-opts:
-          enable: true
 
   - name: reality-up+xhttp-down
     type: vless
@@ -145,16 +136,19 @@ proxies:
       support-x25519mlkem768: true
     xhttp-opts:
       path: {{ .xhttp_path }}
+      reuse-settings:
+        max-concurrency: 16-32
+        c-max-reuse-times: 0
+        h-max-request-times: 600-900
+        h-max-reusable-secs: 1800-3000
+        h-keep-alive-period: 0
       download-settings:
         path: {{ .xhttp_path }}
-        server: {{ .xhttp2_server }}
+        server: {{ .xhttp_server }}
         servername: {{ .xhttp2_server }}
         port: 443
-        tls: true
-        alpn:
-          - h2
-        ech-opts:
-          enable: true
+        alpn: [h2]
+        mode: auto
         reality-opts:
           public-key: ""
 
