@@ -93,9 +93,14 @@ proxy-providers:
     url: {{ .daili_proxy_url }}
     path: proxy-providers/daili.yaml
     interval: 0
-    override:
-      udp-over-tcp: true
-      udp-over-tcp-version: 2
+
+xmux: &xmux
+  reuse-settings:
+    max-concurrency: 16-32
+    c-max-reuse-times: 0
+    h-max-request-times: 600-900
+    h-max-reusable-secs: 1800-3000
+    h-keep-alive-period: 0
 
 proxies:
   - name: vless-us
@@ -132,12 +137,7 @@ proxies:
     xhttp-opts:
       path: {{ .xhttp_path }}
       mode: auto
-      reuse-settings:
-        max-concurrency: 16-32
-        c-max-reuse-times: 0
-        h-max-request-times: 600-900
-        h-max-reusable-secs: 1800-3000
-        h-keep-alive-period: 0
+      <<: *xmux
       download-settings:
         server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
@@ -161,12 +161,7 @@ proxies:
     xhttp-opts:
       path: {{ .xhttp_path }}
       mode: auto
-      reuse-settings:
-        max-concurrency: 16-32
-        c-max-reuse-times: 0
-        h-max-request-times: 600-900
-        h-max-reusable-secs: 1800-3000
-        h-keep-alive-period: 0
+      <<: *xmux
       download-settings:
         server: {{ .xhttp4_server }}
         servername: {{ .xhttp4_server }}
@@ -189,12 +184,7 @@ proxies:
       support-x25519mlkem768: true
     xhttp-opts:
       path: {{ .xhttp_path }}
-      reuse-settings:
-        max-concurrency: 16-32
-        c-max-reuse-times: 0
-        h-max-request-times: 600-900
-        h-max-reusable-secs: 1800-3000
-        h-keep-alive-period: 0
+      <<: *xmux
       download-settings:
         server: {{ .xhttp_server }}
         servername: {{ .xhttp2_server }}
@@ -236,12 +226,7 @@ proxies:
     xhttp-opts:
       path: {{ .xhttp_path }}
       mode: auto
-      reuse-settings:
-        max-concurrency: 16-32
-        c-max-reuse-times: 0
-        h-max-request-times: 600-900
-        h-max-reusable-secs: 1800-3000
-        h-keep-alive-period: 0
+      <<: *xmux
       download-settings:
         server: {{ .xhttp_server }}
         servername: {{ .xhttp2_server }}
@@ -333,6 +318,7 @@ rule-providers:
 
 rules:
   - DOMAIN-SUFFIX,data.bilibili.com,REJECT
+  - DOMAIN,bfs,REJECT
   # domain规则
   # 国内
   - GEOSITE,private,DIRECT
