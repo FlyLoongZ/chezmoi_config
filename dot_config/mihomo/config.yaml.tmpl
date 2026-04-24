@@ -61,6 +61,31 @@ dns:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
 
+sniffer:
+  enable: true
+  force-dns-mapping: false
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - Mijia Cloud
+  skip-src-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 127.0.0.0/8
+  skip-dst-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 127.0.0.0/8
+
 # 代理集合
 proxy-providers:
   daili:
@@ -78,11 +103,11 @@ proxies:
     server: {{ .vless_server }}
     port: 443
     udp: true
-    uuid: {{ .vless_us_uuid2 }}
+    uuid: {{ .vless_us_uuid }}
     flow: xtls-rprx-vision
     packet-encoding: xudp
     tls: true
-    servername: {{ .vless_sni2 }}
+    servername: {{ .vless_sni }}
     client-fingerprint: chrome
     reality-opts:
       public-key: {{ .vless_public_key }}
@@ -114,9 +139,37 @@ proxies:
         h-max-reusable-secs: 1800-3000
         h-keep-alive-period: 0
       download-settings:
-        path: {{ .xhttp_path }}
-        server: {{ .xhttp_server }}
+        server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
+
+  - name: xhttp-allin-2
+    type: vless
+    server: {{ .xhttp3_server }}
+    port: 443
+    udp: true
+    packet-encoding: xudp
+    uuid: {{ .xhttp_uuid }}
+    tls: true
+    network: xhttp
+    flow: xtls-rprx-vision
+    alpn: [h2]
+    servername: {{ .xhttp3_server }}
+    client-fingerprint: chrome
+    encryption: {{ .vless_us_enc }}
+    ech-opts:
+      enable: true
+    xhttp-opts:
+      path: {{ .xhttp_path }}
+      mode: auto
+      reuse-settings:
+        max-concurrency: 16-32
+        c-max-reuse-times: 0
+        h-max-request-times: 600-900
+        h-max-reusable-secs: 1800-3000
+        h-keep-alive-period: 0
+      download-settings:
+        server: {{ .xhttp4_server }}
+        servername: {{ .xhttp4_server }}
 
   - name: reality-up+xhttp-down
     type: vless
@@ -128,7 +181,7 @@ proxies:
     packet-encoding: xudp
     tls: true
     network: xhttp
-    servername: {{ .vless_sni2 }}
+    servername: {{ .vless_sni }}
     client-fingerprint: chrome
     encryption: {{ .vless_us_enc }}
     reality-opts:
@@ -143,14 +196,56 @@ proxies:
         h-max-reusable-secs: 1800-3000
         h-keep-alive-period: 0
       download-settings:
-        path: {{ .xhttp_path }}
         server: {{ .xhttp_server }}
         servername: {{ .xhttp2_server }}
-        port: 443
         alpn: [h2]
         mode: auto
         reality-opts:
           public-key: ""
+
+  - name: vless-for
+    type: vless
+    server: {{ .xhttp_for_server }}
+    port: 443
+    uuid: {{ .xhttp_for_uuid }}
+    flow: xtls-rprx-vision
+    packet-encoding: xudp
+    tls: true
+    alpn: [h2]
+    network: tcp
+    client-fingerprint: chrome
+    fingerprint: {{ .xhttp_for_fingerprint }}
+
+  - name: xhttp-allin-for
+    type: vless
+    server: {{ .xhttp1_server }}
+    port: 443
+    dialer-proxy: vless-for
+    udp: true
+    packet-encoding: xudp
+    uuid: {{ .xhttp_uuid }}
+    tls: true
+    network: xhttp
+    flow: xtls-rprx-vision
+    alpn: [h2]
+    servername: {{ .xhttp1_server }}
+    client-fingerprint: chrome
+    encryption: {{ .vless_us_enc }}
+    ech-opts:
+      enable: true
+    xhttp-opts:
+      path: {{ .xhttp_path }}
+      mode: auto
+      reuse-settings:
+        max-concurrency: 16-32
+        c-max-reuse-times: 0
+        h-max-request-times: 600-900
+        h-max-reusable-secs: 1800-3000
+        h-keep-alive-period: 0
+      download-settings:
+        server: {{ .xhttp_server }}
+        servername: {{ .xhttp2_server }}
+
 
 proxytest: &proxytest
   url: https://www.gstatic.com/generate_204
@@ -165,6 +260,8 @@ proxy-groups:
     type: select
     proxies:
       - xhttp-allin
+      - xhttp-allin-2
+      - xhttp-allin-for
       - reality-up+xhttp-down
       - vless-us
       - 美国
