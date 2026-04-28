@@ -94,7 +94,13 @@ proxy-providers:
     path: proxy-providers/daili.yaml
     interval: 0
 
-xmux: &xmux
+xhttp_opt: &xhttp_opt
+  x-padding-obfs-mode: true
+  x-padding-placement: header
+  x-padding-method: tokenish
+  x-padding-header: X-Auth-Token
+  mode: stream-up
+  path: {{ .xhttp_path }}
   reuse-settings:
     max-concurrency: 16-32
     c-max-reuse-times: 0
@@ -135,9 +141,7 @@ proxies:
     ech-opts:
       enable: true
     xhttp-opts:
-      path: {{ .xhttp_path }}
-      mode: auto
-      <<: *xmux
+      <<: *xhttp_opt
       download-settings:
         server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
@@ -159,9 +163,7 @@ proxies:
     ech-opts:
       enable: true
     xhttp-opts:
-      path: {{ .xhttp_path }}
-      mode: auto
-      <<: *xmux
+      <<: *xhttp_opt
       download-settings:
         server: {{ .xhttp4_server }}
         servername: {{ .xhttp4_server }}
@@ -183,9 +185,7 @@ proxies:
     ech-opts:
       enable: true
     xhttp-opts:
-      path: {{ .xhttp_path }}
-      mode: auto
-      <<: *xmux
+      <<: *xhttp_opt
       download-settings:
         server: {{ .xhttp_fastly_server }}
         servername: {{ .xhttp_fastly_server }}
@@ -209,13 +209,11 @@ proxies:
       public-key: {{ .vless_public_key }}
       support-x25519mlkem768: true
     xhttp-opts:
-      path: {{ .xhttp_path }}
-      <<: *xmux
+      <<: *xhttp_opt
       download-settings:
         server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
         alpn: [h2]
-        mode: auto
         reality-opts:
           public-key: ""
 
@@ -250,9 +248,7 @@ proxies:
     ech-opts:
       enable: true
     xhttp-opts:
-      path: {{ .xhttp_path }}
-      mode: auto
-      <<: *xmux
+      <<: *xhttp_opt
       download-settings:
         server: {{ .xhttp_server }}
         servername: {{ .xhttp2_server }}
