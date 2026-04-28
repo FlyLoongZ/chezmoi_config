@@ -103,7 +103,7 @@ xmux: &xmux
     h-keep-alive-period: 0
 
 proxies:
-  - name: vless-us
+  - name: vless
     type: vless
     server: {{ .vless_server }}
     port: 443
@@ -118,7 +118,7 @@ proxies:
       public-key: {{ .vless_public_key }}
       support-x25519mlkem768: true
 
-  - name: xhttp-allin
+  - name: xhttp
     type: vless
     server: {{ .xhttp1_server }}
     port: 443
@@ -142,7 +142,7 @@ proxies:
         server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
 
-  - name: xhttp-allin-2
+  - name: xhttp2
     type: vless
     server: {{ .xhttp3_server }}
     port: 443
@@ -166,6 +166,32 @@ proxies:
         server: {{ .xhttp4_server }}
         servername: {{ .xhttp4_server }}
 
+  - name: xhttp-fastly
+    type: vless
+    server: {{ .xhttp1_server }}
+    port: 443
+    udp: true
+    packet-encoding: xudp
+    uuid: {{ .xhttp_uuid }}
+    tls: true
+    network: xhttp
+    flow: xtls-rprx-vision
+    alpn: [h2]
+    servername: {{ .xhttp1_server }}
+    client-fingerprint: chrome
+    encryption: {{ .vless_us_enc }}
+    ech-opts:
+      enable: true
+    xhttp-opts:
+      path: {{ .xhttp_path }}
+      mode: auto
+      <<: *xmux
+      download-settings:
+        server: {{ .xhttp_fastly_server }}
+        servername: {{ .xhttp_fastly_server }}
+        ech-opts:
+          enable: false
+
   - name: reality-up+xhttp-down
     type: vless
     server: {{ .vless_server }}
@@ -186,7 +212,7 @@ proxies:
       path: {{ .xhttp_path }}
       <<: *xmux
       download-settings:
-        server: {{ .xhttp_server }}
+        server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
         alpn: [h2]
         mode: auto
@@ -206,7 +232,7 @@ proxies:
     client-fingerprint: chrome
     fingerprint: {{ .xhttp_for_fingerprint }}
 
-  - name: xhttp-allin-for
+  - name: xhttp-for
     type: vless
     server: {{ .xhttp1_server }}
     port: 443
@@ -244,11 +270,12 @@ proxy-groups:
   - name: mainproxy
     type: select
     proxies:
-      - xhttp-allin
-      - xhttp-allin-2
-      - xhttp-allin-for
+      - xhttp
+      - xhttp2
+      - xhttp-fastly
+      - xhttp-for
       - reality-up+xhttp-down
-      - vless-us
+      - vless
       - 美国
       - 日本
       - 新加坡
