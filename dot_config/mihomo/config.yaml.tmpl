@@ -61,6 +61,26 @@ dns:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
 
+tun:
+  enable: false
+  stack: system
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+  include-uid: [1000]
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  route-exclude-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 127.0.0.0/8
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - ::1/128
+
 sniffer:
   enable: true
   force-dns-mapping: false
@@ -70,25 +90,22 @@ sniffer:
     HTTP:
       ports: [80, 8080-8880]
     TLS:
-      ports: [443, 8443]
+      ports: [443, 8443, 7826]
     QUIC:
       ports: [443, 8443]
-  skip-domain:
-    - Mijia Cloud
   skip-src-address:
-    - 10.0.0.0/8
-    - 172.16.0.0/12
-    - 192.168.0.0/16
     - 127.0.0.0/8
-    - 100.64.0.0/10
-    - 169.254.0.0/16
+    - ::1/128
   skip-dst-address:
     - 10.0.0.0/8
     - 172.16.0.0/12
     - 192.168.0.0/16
-    - 127.0.0.0/8
     - 100.64.0.0/10
     - 169.254.0.0/16
+    - 127.0.0.0/8
+    - fc00::/7
+    - fe80::/7
+    - ::1/128
 
 # 代理集合
 proxy-providers:
@@ -343,22 +360,30 @@ rule-providers:
     behavior: domain
     format: mrs
 
+  ip-cn:
+    type: http
+    path: rules/bgp-cn.txt
+    url: https://ghproxy.net/https://raw.githubusercontent.com/PaPerseller/chn-iplist/master/chnroute.txt
+    interval: 43200
+    proxy: DIRECT
+    behavior: ipcidr
+    format: text
+
 rules:
   - DOMAIN-SUFFIX,data.bilibili.com,REJECT
   - DOMAIN,bfs,REJECT
   # domain规则
+  # 国外
+  - GEOSITE,geolocation-!cn,mainproxy
   # 国内
   - GEOSITE,private,DIRECT
   - RULE-SET,icp,DIRECT
-  - GEOSITE,CN,DIRECT
-  # 国外
-  - GEOSITE,geolocation-!cn,mainproxy
 
   # ip规则
-  # 国内
   - GEOIP,private,DIRECT
-  - GEOIP,CN,DIRECT
-    ## 阿里云
+  # 国内
+  - RULE-SET,ip-cn,DIRECT
+  ## 阿里云
   - IP-ASN,59055,DIRECT
   - IP-ASN,59054,DIRECT
   - IP-ASN,59053,DIRECT
