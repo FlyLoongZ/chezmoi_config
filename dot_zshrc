@@ -1,25 +1,24 @@
 HISTFILE=~/.zsh_history
-HISTSIZE=100000
-SAVEHIST=100000
-bindkey -e
+HISTSIZE=1000
+SAVEHIST=10000
 ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
+PROMPT="%B[%F{green}%n%f@%F{cyan}%m%f %~ ]%b%# "
 
-zstyle :compinstall filename '~/.zshrc'
-autoload -Uz compinit
-compinit
+path+=("$HOME/.local/share/npm-global/bin" "$HOME/.local/bin")
 
-TRAPTERM () { exit }
-PROMPT="%F{white}%B[%f%F{gree}%n%f%F{white}@%f%F{045}%m%f %F{white}%~ ]%b%f%# "
-
+bindkey -e
 bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 bindkey  "^[[5~"  beginning-of-history
 bindkey  "^[[6~"  end-of-history
 
+zstyle :compinstall filename "$HOME/.zshrc"
+autoload -Uz compinit
+compinit
+
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 eval "$(atuin init zsh --disable-up-arrow)"
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-
