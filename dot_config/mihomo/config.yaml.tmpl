@@ -8,7 +8,7 @@ mixed-port: 57878
 # 运行模式
 mode: rule
 # 日志级别
-log-level: warning
+log-level: info
 # ipv6
 ipv6: true
 
@@ -34,7 +34,6 @@ unified-delay: true
 tcp-concurrent: true
 
 localdns: &localdns 127.0.0.1
-localdns_ecs: &localdns_ecs 127.0.0.1#ecs=67.114.123.123/32
 dns:
   # 启用dns模块
   enable: true
@@ -53,7 +52,8 @@ dns:
   direct-nameserver:
     - *localdns
   nameserver:
-    - *localdns_ecs
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
   nameserver-policy:
     "rule-set:icp":
       - *localdns
@@ -120,8 +120,8 @@ xhttp_opt: &xhttp_opt
   x-padding-placement: header
   x-padding-method: tokenish
   x-padding-header: X-Auth-Token
-  mode: stream-up
   path: {{ .xhttp_path }}
+  mode: auto
   reuse-settings:
     max-connections: 1
     c-max-reuse-times: 0
@@ -162,6 +162,29 @@ proxies:
     network: xhttp
     flow: xtls-rprx-vision
     alpn: [h2]
+    servername: {{ .xhttp1_server }}
+    client-fingerprint: chrome
+    encryption: {{ .vless_us_enc }}
+    ech-opts:
+      enable: true
+    xhttp-opts:
+      <<: *xhttp_opt
+      download-settings:
+        <<: *xmux_down
+        server: {{ .xhttp_server2 }}
+        servername: {{ .xhttp2_server }}
+
+  - name: xhttp-h3
+    type: vless
+    server: {{ .xhttp_server }}
+    port: 443
+    udp: true
+    packet-encoding: xudp
+    uuid: {{ .xhttp_uuid }}
+    tls: true
+    network: xhttp
+    flow: xtls-rprx-vision
+    alpn: [h3]
     servername: {{ .xhttp1_server }}
     client-fingerprint: chrome
     encryption: {{ .vless_us_enc }}
@@ -215,6 +238,7 @@ proxies:
       enable: true
     xhttp-opts:
       <<: *xhttp_opt
+      mode: stream-up
       download-settings:
         <<: *xmux_down
         server: {{ .xhttp_fastly_server }}
@@ -297,6 +321,7 @@ proxy-groups:
     type: select
     proxies:
       - xhttp
+      - xhttp-h3
       - xhttp2
       - xhttp-fastly
       - xhttp-for
