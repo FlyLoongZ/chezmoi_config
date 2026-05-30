@@ -115,6 +115,20 @@ proxy-providers:
     path: proxy-providers/daili.yaml
     interval: 0
 
+xhttp_proxies: &xhttp_proxies
+  type: vless
+  port: 443
+  network: xhttp
+  udp: true
+  packet-encoding: xudp
+  tls: true
+  client-fingerprint: chrome
+  flow: xtls-rprx-vision
+  encryption: {{ .vless_enc }}
+  uuid: {{ .xhttp_uuid }}
+  ech-opts:
+    enable: true
+
 xhttp_opt: &xhttp_opt
   x-padding-obfs-mode: true
   x-padding-placement: header
@@ -152,21 +166,9 @@ proxies:
       support-x25519mlkem768: true
 
   - name: xhttp
-    type: vless
+    <<: *xhttp_proxies
     server: {{ .xhttp_server }}
-    port: 443
-    udp: true
-    packet-encoding: xudp
-    uuid: {{ .xhttp_uuid }}
-    tls: true
-    network: xhttp
-    flow: xtls-rprx-vision
-    alpn: [h2]
     servername: {{ .xhttp1_server }}
-    client-fingerprint: chrome
-    encryption: {{ .vless_us_enc }}
-    ech-opts:
-      enable: true
     xhttp-opts:
       <<: *xhttp_opt
       download-settings:
@@ -175,21 +177,10 @@ proxies:
         servername: {{ .xhttp2_server }}
 
   - name: xhttp-h3
-    type: vless
-    server: {{ .xhttp_server }}
-    port: 443
-    udp: true
-    packet-encoding: xudp
-    uuid: {{ .xhttp_uuid }}
-    tls: true
-    network: xhttp
-    flow: xtls-rprx-vision
+    <<: *xhttp_proxies
     alpn: [h3]
+    server: {{ .xhttp_server }}
     servername: {{ .xhttp1_server }}
-    client-fingerprint: chrome
-    encryption: {{ .vless_us_enc }}
-    ech-opts:
-      enable: true
     xhttp-opts:
       <<: *xhttp_opt
       download-settings:
@@ -198,21 +189,9 @@ proxies:
         servername: {{ .xhttp2_server }}
 
   - name: xhttp2
-    type: vless
+    <<: *xhttp_proxies
     server: {{ .xhttp3_server }}
-    port: 443
-    udp: true
-    packet-encoding: xudp
-    uuid: {{ .xhttp_uuid }}
-    tls: true
-    network: xhttp
-    flow: xtls-rprx-vision
-    alpn: [h2]
     servername: {{ .xhttp3_server }}
-    client-fingerprint: chrome
-    encryption: {{ .vless_us_enc }}
-    ech-opts:
-      enable: true
     xhttp-opts:
       <<: *xhttp_opt
       download-settings:
@@ -221,21 +200,9 @@ proxies:
         servername: {{ .xhttp4_server }}
 
   - name: xhttp-fastly
-    type: vless
+    <<: *xhttp_proxies
     server: {{ .xhttp1_server }}
-    port: 443
-    udp: true
-    packet-encoding: xudp
-    uuid: {{ .xhttp_uuid }}
-    tls: true
-    network: xhttp
-    flow: xtls-rprx-vision
-    alpn: [h2]
     servername: {{ .xhttp1_server }}
-    client-fingerprint: chrome
-    encryption: {{ .vless_us_enc }}
-    ech-opts:
-      enable: true
     xhttp-opts:
       <<: *xhttp_opt
       mode: stream-up
@@ -247,18 +214,9 @@ proxies:
           enable: false
 
   - name: reality-up+xhttp-down
-    type: vless
+    <<: *xhttp_proxies
     server: {{ .vless_server }}
-    port: 443
-    udp: true
-    uuid: {{ .xhttp_uuid }}
-    flow: xtls-rprx-vision
-    packet-encoding: xudp
-    tls: true
-    network: xhttp
     servername: {{ .vless_sni }}
-    client-fingerprint: chrome
-    encryption: {{ .vless_us_enc }}
     reality-opts:
       public-key: {{ .vless_public_key }}
       support-x25519mlkem768: true
@@ -268,45 +226,8 @@ proxies:
         <<: *xmux_down
         server: {{ .xhttp2_server }}
         servername: {{ .xhttp2_server }}
-        alpn: [h2]
         reality-opts:
           public-key: ""
-
-  - name: vless-for
-    type: vless
-    server: {{ .xhttp_for_server }}
-    port: 443
-    uuid: {{ .xhttp_for_uuid }}
-    flow: xtls-rprx-vision
-    packet-encoding: xudp
-    tls: true
-    alpn: [h2]
-    network: tcp
-    client-fingerprint: chrome
-    fingerprint: {{ .xhttp_for_fingerprint }}
-
-  - name: xhttp-for
-    type: vless
-    server: {{ .xhttp1_server }}
-    port: 443
-    dialer-proxy: vless-for
-    udp: true
-    packet-encoding: xudp
-    uuid: {{ .xhttp_uuid }}
-    tls: true
-    network: xhttp
-    flow: xtls-rprx-vision
-    alpn: [h2]
-    servername: {{ .xhttp1_server }}
-    client-fingerprint: chrome
-    encryption: {{ .vless_us_enc }}
-    ech-opts:
-      enable: true
-    xhttp-opts:
-      <<: *xhttp_opt
-      download-settings:
-        server: {{ .xhttp_server }}
-        servername: {{ .xhttp2_server }}
 
 proxytest: &proxytest
   url: https://www.gstatic.com/generate_204
@@ -324,7 +245,6 @@ proxy-groups:
       - xhttp-h3
       - xhttp2
       - xhttp-fastly
-      - xhttp-for
       - reality-up+xhttp-down
       - vless
       - 美国
